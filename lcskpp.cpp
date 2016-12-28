@@ -1,4 +1,4 @@
-// lcsk algoritmi
+// lcskpp algoritmi
 
 #include <algorithm>
 #include <cassert>
@@ -97,16 +97,18 @@ vector<vector<int>> calc_matches_slow(const string &a, const string &b, int k) {
   return matches;
 }
 
+
 // obican dp: O(nm)
-int lcsk_dp(const string& a, const string& b, int k) {
+int lcskpp_dp(const string& a, const string& b, int k) {
   int n = a.size();
   int m = b.size();
 
   vector<vector<int>> matches = calc_matches(a, b, k);
   vector<vector<int>> f(n, vector<int>(m, 0));
-  
+
   REP(i, n) {
     int jp = 0;
+    int cont_ptr = 0;
     REP(j, m) {
       if (i) f[i][j] = max(f[i-1][j], f[i][j]);
       if (j) f[i][j] = max(f[i][j-1], f[i][j]);
@@ -117,6 +119,13 @@ int lcsk_dp(const string& a, const string& b, int k) {
 	  f[i][j] = max(f[i][j], f[i-k][j-k] + 1);
 	else
 	  f[i][j] = 1;
+
+        if (i > 0) {
+          while (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] < j-1) cont_ptr++;
+          if (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] == j-1) {
+            f[i][j] = max(f[i][j], f[i-1][j-1] + 1);
+          }
+        }
       }
     }
   }
@@ -124,7 +133,9 @@ int lcsk_dp(const string& a, const string& b, int k) {
   return f[n-1][m-1];
 }
 
-int lcsk_better(const string& a, const string& b, int k) {
+
+// racuna LCSK zasad 
+int lcskpp_better(const string& a, const string& b, int k) {
   int n = a.size();
   //  int m = b.size();
 
@@ -193,8 +204,8 @@ int lcsk_better(const string& a, const string& b, int k) {
 typedef function<int (const string&, const string&, int)> solver_t;
 
 map<string, solver_t> solvers = {
-  {"dp", lcsk_dp},
-  {"better?", lcsk_better},
+  {"dp", lcskpp_dp},
+  {"better?", lcskpp_better},
 };
 
 string gen_random_string(int n, int sigma) {
@@ -217,15 +228,15 @@ int main(void) {
     string B = gen_random_string(N, S);
     int k = rand() % 5 + 2;
 
-    int lcsk_len = lcsk_dp(A, B, k);
+    int lcskpp_len = lcskpp_dp(A, B, k);
     
     for (auto& solver : solvers) {
       times[solver.first] -= clock();
-      int solver_lcsk_len = solver.second(A, B, k);
+      int solver_lcskpp_len = solver.second(A, B, k);
       times[solver.first] += clock();
-      if (solver_lcsk_len != lcsk_len) {
+      if (solver_lcskpp_len != lcskpp_len) {
         puts("BUG");
-        TRACE(lcsk_len _ solver.first _ solver_lcsk_len);
+        TRACE(lcskpp_len _ solver.first _ solver_lcskpp_len);
         return 0;
       }
     }
