@@ -26,10 +26,12 @@ void calc_matches_slow(const string &a, const string &b, int k, vector<vector<in
   matches.resize(n + 1);
   vector<vector<int>> g(n + 1, vector<int>(m + 1, 0));
   REP(i, n) REP(j, m) {
-    if (a[i] != b[j]) g[i][j] = -1;
-    else if (i < n && j < m) g[i+1][j+1] = g[i][j] + 1;
+    if (a[i] == b[j]) {
+      if (i && j) g[i][j] = g[i-1][j-1] + 1;
+      else g[i][j] = 1;
+    }
 
-    if (g[i][j] >= k - 1) 
+    if (g[i][j] >= k) 
       matches[i].push_back(j);
   }
 }
