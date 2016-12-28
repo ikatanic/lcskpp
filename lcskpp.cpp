@@ -62,7 +62,6 @@ vector<vector<int>> calc_matches(const string& a, const string& b, int k) {
   
   vector<vector<int>> matches(a.size());
   current_hash = 0;
-  int tot = 0;
   for (int i = 0; i < (int)a.size(); ++i) {
     current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
     if (i >= k-1) {
@@ -70,7 +69,6 @@ vector<vector<int>> calc_matches(const string& a, const string& b, int k) {
            it != b_hashes.end() && it->first == current_hash;
            ++it) {
         matches[i].push_back(it->second);
-        tot++;
       }
     }
   }
@@ -98,38 +96,28 @@ vector<vector<int>> calc_matches_slow(const string &a, const string &b, int k) {
 }
 
 
-// obican dp: O(nm)
+// obican dp: O(n^3)
 int lcskpp_dp(const string& a, const string& b, int k) {
   int n = a.size();
   int m = b.size();
 
-  vector<vector<int>> matches = calc_matches(a, b, k);
   vector<vector<int>> f(n, vector<int>(m, 0));
-
+  
   REP(i, n) {
-    int jp = 0;
-    int cont_ptr = 0;
     REP(j, m) {
       if (i) f[i][j] = max(f[i-1][j], f[i][j]);
       if (j) f[i][j] = max(f[i][j-1], f[i][j]);
 
-      while (jp < (int)matches[i].size() && matches[i][jp] < j) ++jp;
-      if (jp < (int)matches[i].size() && matches[i][jp] == j) {
-	if (i >= k && j >= k)
-	  f[i][j] = max(f[i][j], f[i-k][j-k] + k);
-	else
-	  f[i][j] = k;
-
-        if (i > 0) {
-          while (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] < j-1) cont_ptr++;
-          if (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] == j-1) {
-            f[i][j] = max(f[i][j], f[i-1][j-1] + 1);
-          }
+      int q = 0;
+      while (i-q >= 0 && j-q >= 0 && a[i-q] == b[j-q]) {
+        q++;
+        if (q >= k) {
+          f[i][j] = max(f[i][j], (i >= q && j >= q ? f[i-q][j-q] : 0) + q);
         }
       }
     }
   }
-
+  
   return f[n-1][m-1];
 }
 
@@ -169,6 +157,8 @@ int lcskpp_better(const string& a, const string& b, int k) {
 
   int r = 0;
 
+  map<pair<int, int>, int> point_dp;
+  
   REP(i, n) {
     for (auto jt = matches[i].rbegin();
 	 jt != matches[i].rend();
@@ -190,15 +180,38 @@ int lcskpp_better(const string& a, const string& b, int k) {
       int l = lo - 1;
 
       // probam popravit trenutni MinYPrefix.
-      
-      if (*jt < MinYPrefix[l + 1].get_new())
-	MinYPrefix[l + 1].set(i, *jt);
 
-      if (l == r) ++r;
+      for (int s = 1; s <= k; ++s) {
+        if (*jt < MinYPrefix[l + s].get_new())
+          MinYPrefix[l + s].set(i, *jt);
+      }
+      int my_dp = l+k;
+      r = max(r, l + k);
+
+      if (i > 0) {
+        if (point_dp.count(make_pair(i-1, *jt-1))) {
+          int new_dp = point_dp[make_pair(i-1, *jt-1)] + 1;
+          if (new_dp > my_dp) {
+            my_dp = new_dp;
+            if (*jt < MinYPrefix[new_dp].get_new())
+              MinYPrefix[new_dp].set(i, *jt);
+          }
+          if (my_dp == r+1) r++;
+        }
+      }
+
+      point_dp[{i, *jt}] = my_dp;
     }
+
+    REP(j, n) {
+      assert(MinYPrefix[j].get_new() <= MinYPrefix[j+1].get_new());
+      //      printf("%d ", MinYPrefix[j].get_new());
+      //      printf("\n");
+    }
+    //    printf("\n");
   }
 
-  return r*k;
+  return r;
 }
 
 typedef function<int (const string&, const string&, int)> solver_t;
@@ -219,15 +232,15 @@ int main(void) {
 
   map<string, double> times;
 
-  int T = 20;
+  int T = 200;
   REP(t, T) {
-    int N = 3000;
+    int N = 1000;
     int S = 4;
     
     string A = gen_random_string(N, S);
     string B = gen_random_string(N, S);
     int k = rand() % 5 + 2;
-
+    
     int lcskpp_len = lcskpp_dp(A, B, k);
     
     for (auto& solver : solvers) {
@@ -236,6 +249,7 @@ int main(void) {
       times[solver.first] += clock();
       if (solver_lcskpp_len != lcskpp_len) {
         puts("BUG");
+        TRACE(A _ B _ k);
         TRACE(lcskpp_len _ solver.first _ solver_lcskpp_len);
         return 0;
       }
