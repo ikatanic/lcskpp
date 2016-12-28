@@ -18,12 +18,72 @@ using namespace std;
 typedef long long llint;
 const int inf = 1e9;
 
+// Maps characters found in strings a and b to interval [0, S>, where S is
+// number of unique characters.
+// Returns mapping and S.
+pair<vector<int>, int> remap_characters(const string& a, const string& b) {
+  vector<int> char_id(256, -1);
+  int char_idx = 0;
+  for (const unsigned char& c: a) {
+    if (char_id[c] == -1) {
+      char_id[c] = char_idx++;
+    }
+  }
+  for (const unsigned char& c: b) {
+    if (char_id[c] == -1) {
+      char_id[c] = char_idx++;
+    }
+  }
+  return {char_id, char_idx};
+}
+
+// Takes strings a and b as inputs. And small number k.
+// Returns lists of all k-matches.
+// Time: O(n log n + m log m + r) where n = |a|, m = |b|, r = |k-matches|.
+vector<vector<int>> calc_matches(const string& a, const string& b, int k) {
+  // First, remap characters to interval [0, c>
+  auto mapping = remap_characters(a, b);
+  vector<int> map = mapping.first;
+  int sigma = mapping.second;
+
+  uint64_t sigma_to_k = 1;
+  for (int i = 0; i < k; ++i) {
+    sigma_to_k *= sigma;
+  }
+
+  vector<pair<uint64_t, int>> b_hashes;
+  uint64_t current_hash = 0;
+  for (int i = 0; i < (int)b.size(); ++i) {
+    current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
+    if (i >= k-1) b_hashes.push_back({current_hash, i});
+  }
+
+  sort(b_hashes.begin(), b_hashes.end());
+  
+  vector<vector<int>> matches(a.size());
+  current_hash = 0;
+  int tot = 0;
+  for (int i = 0; i < (int)a.size(); ++i) {
+    current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
+    if (i >= k-1) {
+      for (auto it = lower_bound(b_hashes.begin(), b_hashes.end(), make_pair(current_hash, -1));
+           it != b_hashes.end() && it->first == current_hash;
+           ++it) {
+        matches[i].push_back(it->second);
+        tot++;
+      }
+    }
+  }
+  return matches;
+}
+
+
 // k-matchevi u O(nm), matches[i] sadrzi j, ako X[i-k+1,i] == Y[j-k+1,j]
-void calc_matches_slow(const string &a, const string &b, int k, vector<vector<int>> &matches) {
+vector<vector<int>> calc_matches_slow(const string &a, const string &b, int k) {
   int n = a.size();
   int m = b.size();
 
-  matches.resize(n + 1);
+  vector<vector<int>> matches(n);
   vector<vector<int>> g(n + 1, vector<int>(m + 1, 0));
   REP(i, n) REP(j, m) {
     if (a[i] == b[j]) {
@@ -34,6 +94,7 @@ void calc_matches_slow(const string &a, const string &b, int k, vector<vector<in
     if (g[i][j] >= k) 
       matches[i].push_back(j);
   }
+  return matches;
 }
 
 // obican dp: O(nm)
@@ -41,14 +102,12 @@ int lcsk_dp(const string& a, const string& b, int k) {
   int n = a.size();
   int m = b.size();
 
-  vector<vector<int>> matches;
-  calc_matches_slow(a, b, k, matches);
-
-  vector<vector<int>> f(n + 1, vector<int>(m + 1, 0));
+  vector<vector<int>> matches = calc_matches(a, b, k);
+  vector<vector<int>> f(n, vector<int>(m, 0));
   
-  REP(i, n+1) {
+  REP(i, n) {
     int jp = 0;
-    REP(j, m+1) {
+    REP(j, m) {
       if (i) f[i][j] = max(f[i-1][j], f[i][j]);
       if (j) f[i][j] = max(f[i][j-1], f[i][j]);
 
@@ -62,15 +121,14 @@ int lcsk_dp(const string& a, const string& b, int k) {
     }
   }
 
-  return f[n][m];
+  return f[n-1][m-1];
 }
 
 int lcsk_better(const string& a, const string& b, int k) {
   int n = a.size();
-  int m = b.size();
+  //  int m = b.size();
 
-  vector<vector<int>> matches;
-  calc_matches_slow(a, b, k, matches); // brute za sad!!!
+  vector<vector<int>> matches = calc_matches(a, b, k);
 
   // trenutno nisam u stanju maknut deque...
   // znaci zelim imat pristup staroj verziji MinYPrefix, pa pamtim
@@ -150,14 +208,14 @@ int main(void) {
 
   map<string, double> times;
 
-  int T = 10;
+  int T = 20;
   REP(t, T) {
-    int N = 2000;
-    int S = 5;
+    int N = 3000;
+    int S = 4;
     
     string A = gen_random_string(N, S);
     string B = gen_random_string(N, S);
-    int k = rand() % 5 + 1;
+    int k = rand() % 5 + 2;
 
     int lcsk_len = lcsk_dp(A, B, k);
     
