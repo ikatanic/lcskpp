@@ -114,9 +114,9 @@ int lcsk_dp(const string& a, const string& b, int k) {
       while (jp < (int)matches[i].size() && matches[i][jp] < j) ++jp;
       if (jp < (int)matches[i].size() && matches[i][jp] == j) {
 	if (i >= k && j >= k)
-	  f[i][j] = max(f[i][j], f[i-k][j-k] + 1);
+	  f[i][j] = max(f[i][j], f[i-k][j-k] + k);
 	else
-	  f[i][j] = 1;
+	  f[i][j] = k;
       }
     }
   }
@@ -187,7 +187,7 @@ int lcsk_better(const string& a, const string& b, int k) {
     }
   }
 
-  return r;
+  return k*r;
 }
 
 typedef function<int (const string&, const string&, int)> solver_t;
