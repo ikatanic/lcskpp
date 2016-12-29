@@ -46,7 +46,7 @@ int lcskpp_dp(const string& a, const string& b, int k, const vector<vector<int>>
 }
 
 
-int lcskpp_better(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
+int lcskpp_better_hunt(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
   int n = a.size();
   //  int m = b.size();
 
@@ -60,8 +60,8 @@ int lcskpp_better(const string& a, const string& b, int k, const vector<vector<i
   REP(i, n) match_dp[i].resize(matches[i].size());
   
   REP(i, n) {
-    int cont_ptr = (i == 0 ? 0 : matches[i-1].size()) - 1;
-    for (int jt = (int)matches[i].size()-1; jt >= 0; --jt) {
+    int cont_ptr = 0;
+    REP(jt, (int)matches[i].size()) {
       int j = matches[i][jt];
       int l = match_dp[i][jt];
 
@@ -72,8 +72,8 @@ int lcskpp_better(const string& a, const string& b, int k, const vector<vector<i
       int my_dp = l+k;
 
       if (i > 0) {
-        while (cont_ptr >= 0 && matches[i-1][cont_ptr] > j-1) cont_ptr--;
-        if (cont_ptr >= 0 && matches[i-1][cont_ptr] == j-1) {
+        while (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] < j-1) cont_ptr++;
+        if (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] == j-1) {
           int new_dp = match_dp[i-1][cont_ptr] + 1;
           if (new_dp > my_dp) {
             my_dp = new_dp;
@@ -91,15 +91,15 @@ int lcskpp_better(const string& a, const string& b, int k, const vector<vector<i
       REP(jt, (int)matches[i+k].size()) {
         int j = matches[i+k][jt]; 
 
-        int lo = 0, hi = r+1; // hi se moze smanjit
-        while (lo < hi) {
-          int mid = (lo + hi) / 2;
-          if (MinYPrefix[mid] < j - k + 1)
-            lo = mid + 1;
-          else
-            hi = mid;
-        }
-
+        // int lo = 0, hi = r+1; // hi se moze smanjit
+        // while (lo < hi) {
+        //   int mid = (lo + hi) / 2;
+        //   if (MinYPrefix[mid] < j - k + 1)
+        //     lo = mid + 1;
+        //   else
+        //     hi = mid;
+        // }
+        int lo = lower_bound(MinYPrefix.begin(), MinYPrefix.begin() + r + 2, j-k+1) - MinYPrefix.begin();
         match_dp[i+k][jt] = lo-1;
       }
     }
@@ -108,6 +108,130 @@ int lcskpp_better(const string& a, const string& b, int k, const vector<vector<i
   return r;
 }
 
+int lcskpp_better_hunt2(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
+  int n = a.size();
+  //  int m = b.size();
+
+
+  vector<int> MinYPrefix(n + 1, inf);
+  MinYPrefix[0] = -inf;
+
+  int r = 0;
+
+  vector<vector<int>> match_dp(n);
+  REP(i, n) match_dp[i].resize(matches[i].size());
+  
+  REP(i, n) {
+    int cont_ptr = 0;
+    int prev_l = -1;
+    REP(jt, (int)matches[i].size()) {
+      int j = matches[i][jt];
+      int l = match_dp[i][jt];
+
+      // probam popravit trenutni MinYPrefix.
+      // samo ako sam prvi s tim l
+      if (l > prev_l) {
+        prev_l = l;
+        for (int s = 1; s <= k; ++s) {
+          MinYPrefix[l + s] = min(MinYPrefix[l + s], j);
+        }
+      }
+      int my_dp = l+k;
+
+      if (i > 0) {
+        while (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] < j-1) cont_ptr++;
+        if (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] == j-1) {
+          int new_dp = match_dp[i-1][cont_ptr] + 1;
+          if (new_dp > my_dp) {
+            my_dp = new_dp;
+            MinYPrefix[new_dp] = min(MinYPrefix[new_dp], j);
+          }
+        }
+      }
+
+      r = max(r, my_dp);
+      match_dp[i][jt] = my_dp;
+    }
+
+    if (i + k < n) {
+      // napravi bs za matcheve iz iteracije i+k
+      int cur_lo = 0;
+      REP(jt, (int)matches[i+k].size()) {
+        int j = matches[i+k][jt]; 
+
+        if (MinYPrefix[cur_lo] < j-k+1) {
+          int lo = cur_lo, hi = r+1;
+          while (lo < hi) {
+            int mid = (lo + hi) / 2;
+            if (MinYPrefix[mid] < j - k + 1)
+              lo = mid + 1;
+            else
+              hi = mid;
+          }
+          cur_lo = lo;
+        }
+
+        match_dp[i+k][jt] = cur_lo-1;
+      }
+    }
+  }
+  
+  return r;
+}
+
+int lcskpp_better_kuo_cross(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
+  int n = a.size();
+  //  int m = b.size();
+
+
+  vector<int> MinYPrefix(n + 1, inf);
+  MinYPrefix[0] = -inf;
+
+  int r = 0;
+
+  vector<vector<int>> match_dp(n);
+  REP(i, n) match_dp[i].resize(matches[i].size());
+  
+  REP(i, n) {
+    int cont_ptr = 0;
+    REP(jt, (int)matches[i].size()) {
+      int j = matches[i][jt];
+      int l = match_dp[i][jt];
+
+      // probam popravit trenutni MinYPrefix.
+      for (int s = 1; s <= k; ++s) {
+        MinYPrefix[l + s] = min(MinYPrefix[l + s], j);
+      }
+      int my_dp = l+k;
+
+      if (i > 0) {
+        while (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] < j-1) cont_ptr++;
+        if (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] == j-1) {
+          int new_dp = match_dp[i-1][cont_ptr] + 1;
+          if (new_dp > my_dp) {
+            my_dp = new_dp;
+            MinYPrefix[new_dp] = min(MinYPrefix[new_dp], j);
+          }
+        }
+      }
+
+      r = max(r, my_dp);
+      match_dp[i][jt] = my_dp;
+    }
+
+    if (i + k < n) {
+      // napravi bs za matcheve iz iteracije i+k
+      int lo = 0;
+      REP(jt, (int)matches[i+k].size()) {
+        int j = matches[i+k][jt]; 
+        while (MinYPrefix[lo] < j-k+1) lo++;
+        match_dp[i+k][jt] = lo-1;
+      }
+    }
+  }
+  
+  return r;
+}
 
 // iz papera, modificiran malo
 int lcskpp_pavetic(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
@@ -329,8 +453,10 @@ int lcskpp_pavetic_jos_ubrzan(const string& A, const string& B, int k, const vec
 typedef function<int (const string&, const string&, int, const vector<vector<int>>&)> solver_t;
 
 map<string, solver_t> solvers = {
-  {"dp", lcskpp_dp},
-  {"better?", lcskpp_better},
+  //  {"dp", lcskpp_dp},
+  {"better_hunt", lcskpp_better_hunt},
+  {"better_hunt2", lcskpp_better_hunt2},
+  {"better_kuo_cross", lcskpp_better_kuo_cross},
   {"pavetic", lcskpp_pavetic},
   {"pavetic_ubrzan", lcskpp_pavetic_ubrzan},
   {"pavetic_jos_ubrzan", lcskpp_pavetic_jos_ubrzan}
@@ -347,17 +473,18 @@ int main(void) {
 
   map<string, double> times;
 
-  int T = 200;
+  int T = 20;
   REP(t, T) {
-    int N = 1000;
+    int N = 100000;
     int S = 4;
-    int k = rand() % 5 + 3;
-
+    //    int k = rand() % 5 + 4;
+    int k = 10;
+    
     string A = gen_random_string(N, S);
     string B = gen_random_string(N, S);
 
     auto matches = calc_matches(A, B, k);
-    int lcskpp_len = lcskpp_dp(A, B, k, matches);
+    int lcskpp_len = lcskpp_pavetic(A, B, k, matches);
     
     for (auto& solver : solvers) {
       times[solver.first] -= clock();
