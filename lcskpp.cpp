@@ -88,10 +88,10 @@ int lcskpp_better(const string& a, const string& b, int k, const vector<vector<i
 
     if (i + k < n) {
       // napravi bs za matcheve iz iteracije i+k
-      for (int jt = (int)matches[i+k].size()-1; jt >= 0; --jt) {
+      REP(jt, (int)matches[i+k].size()) {
         int j = matches[i+k][jt]; 
 
-        int lo = 0, hi = n; // hi se moze smanjit
+        int lo = 0, hi = r+1; // hi se moze smanjit
         while (lo < hi) {
           int mid = (lo + hi) / 2;
           if (MinYPrefix[mid] < j - k + 1)
@@ -234,7 +234,7 @@ int main(void) {
   for (auto& time: times) {
     time.second /= CLOCKS_PER_SEC;
     time.second /= T;
-    printf("%s -> %.4lf\n", time.first.c_str(), time.second);
+    printf("%s -> %.6lf\n", time.first.c_str(), time.second);
   }
   
   return 0;
