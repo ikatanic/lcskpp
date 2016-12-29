@@ -96,7 +96,7 @@ vector<vector<int>> calc_matches_slow(const string &a, const string &b, int k) {
 }
 
 
-// obican dp: O(n^3)
+// obican dp: O(nmk)
 int lcskpp_dp(const string& a, const string& b, int k) {
   int n = a.size();
   int m = b.size();
@@ -109,7 +109,7 @@ int lcskpp_dp(const string& a, const string& b, int k) {
       if (j) f[i][j] = max(f[i][j-1], f[i][j]);
 
       int q = 0;
-      while (i-q >= 0 && j-q >= 0 && a[i-q] == b[j-q]) {
+      while (i-q >= 0 && j-q >= 0 && a[i-q] == b[j-q] && q < 2*k) {
         q++;
         if (q >= k) {
           f[i][j] = max(f[i][j], (i >= q && j >= q ? f[i-q][j-q] : 0) + q);
@@ -122,7 +122,6 @@ int lcskpp_dp(const string& a, const string& b, int k) {
 }
 
 
-// racuna LCSK zasad 
 int lcskpp_better(const string& a, const string& b, int k) {
   int n = a.size();
   //  int m = b.size();
@@ -204,11 +203,9 @@ int lcskpp_better(const string& a, const string& b, int k) {
     }
 
     REP(j, n) {
+      // provjeri monotonost
       assert(MinYPrefix[j].get_new() <= MinYPrefix[j+1].get_new());
-      //      printf("%d ", MinYPrefix[j].get_new());
-      //      printf("\n");
     }
-    //    printf("\n");
   }
 
   return r;
