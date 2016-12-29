@@ -185,12 +185,95 @@ int lcskpp_pavetic(const string& A, const string& B, int k, const vector<vector<
   return lcskpp_length;
 }
 
+int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
+  vector<pair<int, int>> matches;
+  for (int i = 0; i < (int)matches_buckets.size(); ++i) {
+    for (int j : matches_buckets[i]) {
+      matches.push_back({i, j});
+    }
+  }
+  
+  vector<tuple<int, int, int> > events;
+  events.reserve(matches.size());
+
+  int n = 0;
+  for (auto it = matches.begin(); it != matches.end(); ++it) {
+    int idx = it - matches.begin();
+    events.push_back(make_tuple(it->first, it->second, idx)); // end
+    
+    n = max(n, it->first+k);
+    n = max(n, it->second+k);
+  }
+
+  // Indexed by column, first:dp value, second:index in matches.
+  FenwickMax<pair<int, int> > dp_col_max(n);
+  vector<int> dp(matches.size());
+  vector<int> recon(matches.size());
+  vector<int> continues(matches.size(), -1);
+  if (k > 1) {
+    for (auto curr = matches.begin(); 
+         curr != matches.end(); ++curr) {
+      auto G = make_pair(curr->first-1, curr->second-1);
+      auto prev = lower_bound(matches.begin(), matches.end(), G);
+      if (*prev == G) {
+	continues[curr-matches.begin()] = prev-matches.begin();
+      }
+    }
+  }
+
+  int best_idx = 0;
+  int lcskpp_length = 0;
+
+  for (auto event = events.begin(), bp = events.begin(); 
+       event != events.end(); ++event) {
+
+    while (get<0>(*bp) <= get<0>(*event) - k) {
+      int idx = get<2>(*bp);
+      int i = get<0>(*bp);
+      int j = get<1>(*bp);
+      dp_col_max.update(j, make_pair(dp[idx], idx));
+      ++bp;
+    }
+    
+    int idx = get<2>(*event);
+    int i = get<0>(*event);
+    int j = get<1>(*event);
+
+    dp[idx] = k;
+    recon[idx] = -1;
+
+    if (continues[idx] != -1) {
+      if (dp[continues[idx]] + 1 > dp[idx]) {
+	dp[idx] = dp[continues[idx]] + 1;
+	recon[idx] = continues[idx];
+      }
+    }
+
+    if (j >= k) {
+      pair<int, int> prev_dp = dp_col_max.get(j - k);
+      if (prev_dp.first > 0 && dp[idx] < prev_dp.first + k) {
+	dp[idx] = prev_dp.first + k;
+	recon[idx] = prev_dp.second;
+      }
+    }
+
+    if (dp[idx] > lcskpp_length) {
+      lcskpp_length = dp[idx];
+      best_idx = idx;
+    }
+  }
+  
+  return lcskpp_length;
+}
+
+
 typedef function<int (const string&, const string&, int, const vector<vector<int>>&)> solver_t;
 
 map<string, solver_t> solvers = {
   {"dp", lcskpp_dp},
   {"better?", lcskpp_better},
-  {"pavetic", lcskpp_pavetic}
+  {"pavetic", lcskpp_pavetic},
+  {"pavetic_ubrzan", lcskpp_pavetic_ubrzan}
 };
 
 string gen_random_string(int n, int sigma) {
