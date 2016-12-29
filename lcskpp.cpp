@@ -7,6 +7,7 @@
 #include <functional>
 #include <map>
 #include <queue>
+#include "utils.h"
 
 using namespace std;
 
@@ -16,88 +17,11 @@ using namespace std;
 #define _ << " _ " <<
 
 typedef long long llint;
+
 const int inf = 1e9;
 
-// Maps characters found in strings a and b to interval [0, S>, where S is
-// number of unique characters.
-// Returns mapping and S.
-pair<vector<int>, int> remap_characters(const string& a, const string& b) {
-  vector<int> char_id(256, -1);
-  int char_idx = 0;
-  for (const unsigned char& c: a) {
-    if (char_id[c] == -1) {
-      char_id[c] = char_idx++;
-    }
-  }
-  for (const unsigned char& c: b) {
-    if (char_id[c] == -1) {
-      char_id[c] = char_idx++;
-    }
-  }
-  return {char_id, char_idx};
-}
-
-// Takes strings a and b as inputs. And small number k.
-// Returns lists of all k-matches.
-// Time: O(n log n + m log m + r) where n = |a|, m = |b|, r = |k-matches|.
-vector<vector<int>> calc_matches(const string& a, const string& b, int k) {
-  // First, remap characters to interval [0, c>
-  auto mapping = remap_characters(a, b);
-  vector<int> map = mapping.first;
-  int sigma = mapping.second;
-
-  uint64_t sigma_to_k = 1;
-  for (int i = 0; i < k; ++i) {
-    sigma_to_k *= sigma;
-  }
-
-  vector<pair<uint64_t, int>> b_hashes;
-  uint64_t current_hash = 0;
-  for (int i = 0; i < (int)b.size(); ++i) {
-    current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
-    if (i >= k-1) b_hashes.push_back({current_hash, i});
-  }
-
-  sort(b_hashes.begin(), b_hashes.end());
-  
-  vector<vector<int>> matches(a.size());
-  current_hash = 0;
-  for (int i = 0; i < (int)a.size(); ++i) {
-    current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
-    if (i >= k-1) {
-      for (auto it = lower_bound(b_hashes.begin(), b_hashes.end(), make_pair(current_hash, -1));
-           it != b_hashes.end() && it->first == current_hash;
-           ++it) {
-        matches[i].push_back(it->second);
-      }
-    }
-  }
-  return matches;
-}
-
-
-// k-matchevi u O(nm), matches[i] sadrzi j, ako X[i-k+1,i] == Y[j-k+1,j]
-vector<vector<int>> calc_matches_slow(const string &a, const string &b, int k) {
-  int n = a.size();
-  int m = b.size();
-
-  vector<vector<int>> matches(n);
-  vector<vector<int>> g(n + 1, vector<int>(m + 1, 0));
-  REP(i, n) REP(j, m) {
-    if (a[i] == b[j]) {
-      if (i && j) g[i][j] = g[i-1][j-1] + 1;
-      else g[i][j] = 1;
-    }
-
-    if (g[i][j] >= k) 
-      matches[i].push_back(j);
-  }
-  return matches;
-}
-
-
 // obican dp: O(nmk)
-int lcskpp_dp(const string& a, const string& b, int k) {
+int lcskpp_dp(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
   int n = a.size();
   int m = b.size();
 
@@ -122,11 +46,9 @@ int lcskpp_dp(const string& a, const string& b, int k) {
 }
 
 
-int lcskpp_better(const string& a, const string& b, int k) {
+int lcskpp_better(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
   int n = a.size();
   //  int m = b.size();
-
-  vector<vector<int>> matches = calc_matches(a, b, k);
 
   // trenutno nisam u stanju maknut deque...
   // znaci zelim imat pristup staroj verziji MinYPrefix, pa pamtim
@@ -211,11 +133,93 @@ int lcskpp_better(const string& a, const string& b, int k) {
   return r;
 }
 
-typedef function<int (const string&, const string&, int)> solver_t;
+
+// iz papera, modificiran malo
+int lcskpp_pavetic(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
+  vector<pair<int, int>> matches;
+  for (int i = 0; i < (int)matches_buckets.size(); ++i) {
+    for (int j : matches_buckets[i]) {
+      matches.push_back({i, j});
+    }
+  }
+  
+  vector<tuple<int, int, int> > events;
+  events.reserve(2*matches.size());
+
+  int n = 0;
+  for (auto it = matches.begin(); it != matches.end(); ++it) {
+    int idx = it - matches.begin();
+    events.push_back(make_tuple(it->first, it->second, 
+				idx+matches.size())); // begin
+    events.push_back(make_tuple(it->first+k, it->second+k, idx)); // end
+    
+    n = max(n, it->first+k);
+    n = max(n, it->second+k);
+  }
+  sort(events.begin(), events.end());
+
+  // Indexed by column, first:dp value, second:index in matches.
+  FenwickMax<pair<int, int> > dp_col_max(n);
+  vector<int> dp(matches.size());
+  vector<int> recon(matches.size());
+  vector<int> continues(matches.size(), -1);
+  if (k > 1) {
+    for (auto curr = matches.begin(); 
+         curr != matches.end(); ++curr) {
+      auto G = make_pair(curr->first-1, curr->second-1);
+      auto prev = lower_bound(matches.begin(), matches.end(), G);
+      if (*prev == G) {
+	continues[curr-matches.begin()] = prev-matches.begin();
+      }
+    }
+  }
+
+  int best_idx = 0;
+  int lcskpp_length = 0;
+    
+  for (auto event = events.begin(); 
+       event != events.end(); ++event) {
+    int idx = get<2>(*event) % matches.size();
+    bool is_beginning = (get<2>(*event) >= matches.size());
+    int i = get<0>(*event);
+    int j = get<1>(*event);
+    int primary_diagonal = n-1+i-j;
+
+    if (is_beginning) { // begin
+      pair<int, int> prev_dp = dp_col_max.get(j);
+      dp[idx] = k;
+      recon[idx] = -1;
+
+      if (prev_dp.first > 0) {
+	dp[idx] = prev_dp.first + k;
+	recon[idx] = prev_dp.second;
+      }
+    } else {
+      if (continues[idx] != -1) {
+	if (dp[continues[idx]] + 1 > dp[idx]) {
+	  dp[idx] = dp[continues[idx]] + 1;
+	  recon[idx] = continues[idx];
+	}
+      }
+
+      dp_col_max.update(j, make_pair(dp[idx], idx));
+
+      if (dp[idx] > lcskpp_length) {
+	lcskpp_length = dp[idx];
+	best_idx = idx;
+      }
+    }
+  }
+  
+  return lcskpp_length;
+}
+
+typedef function<int (const string&, const string&, int, const vector<vector<int>>&)> solver_t;
 
 map<string, solver_t> solvers = {
   {"dp", lcskpp_dp},
   {"better?", lcskpp_better},
+  {"pavetic", lcskpp_pavetic}
 };
 
 string gen_random_string(int n, int sigma) {
@@ -233,16 +237,17 @@ int main(void) {
   REP(t, T) {
     int N = 1000;
     int S = 4;
-    
+    int k = rand() % 5 + 3;
+
     string A = gen_random_string(N, S);
     string B = gen_random_string(N, S);
-    int k = rand() % 5 + 2;
-    
-    int lcskpp_len = lcskpp_dp(A, B, k);
+
+    auto matches = calc_matches(A, B, k);
+    int lcskpp_len = lcskpp_dp(A, B, k, matches);
     
     for (auto& solver : solvers) {
       times[solver.first] -= clock();
-      int solver_lcskpp_len = solver.second(A, B, k);
+      int solver_lcskpp_len = solver.second(A, B, k, matches);
       times[solver.first] += clock();
       if (solver_lcskpp_len != lcskpp_len) {
         puts("BUG");
@@ -251,14 +256,14 @@ int main(void) {
         return 0;
       }
     }
-    printf("done %d/%d\n", t+1, T);
+    printf("done %d/%d (N = %d, k = %d, sigma = %d)\n", t+1, T, N, k, S);
   }
   printf("\n\n");
   
   for (auto& time: times) {
     time.second /= CLOCKS_PER_SEC;
     time.second /= T;
-    printf("%s -> %.2lf\n", time.first.c_str(), time.second);
+    printf("%s -> %.4lf\n", time.first.c_str(), time.second);
   }
   
   return 0;
