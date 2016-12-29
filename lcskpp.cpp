@@ -268,14 +268,14 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<
 
 int lcskpp_pavetic_jos_ubrzan(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
   vector<pair<int, int>> matches;
-  for (int i = 0; i < (int)matches_buckets.size(); ++i) 
-    for (int j : matches_buckets[i]) 
-      matches.push_back({i, j});
 
   int n = 0;
-  for (auto it = matches.begin(); it != matches.end(); ++it) {
-    n = max(n, it->first);
-    n = max(n, it->second);
+  for (int i = 0; i < (int)matches_buckets.size(); ++i) {
+    for (int j : matches_buckets[i]) {
+      matches.push_back({i, j});
+      n = max(n, i);
+      n = max(n, j);
+    }
   }
 
   // Indexed by column, first:dp value, second:index in matches.
