@@ -50,86 +50,61 @@ int lcskpp_better(const string& a, const string& b, int k, const vector<vector<i
   int n = a.size();
   //  int m = b.size();
 
-  // trenutno nisam u stanju maknut deque...
-  // znaci zelim imat pristup staroj verziji MinYPrefix, pa pamtim
-  // stare vrijednosti za svaki element (ograniceni broj doduse).
 
-  struct Cell {
-    deque<pair<int,int>> dq;
-
-    Cell() { dq.push_back({-inf, +inf}); }
-
-    int get_old(int d) {
-      while (dq.size() > 1 && dq[1].first <= d) dq.pop_front();
-      return dq[0].second;
-    }
-
-    int get_new() {
-      return dq.back().second;
-    }
-
-    void set(int i, int v) {
-      dq.push_back({i, v});
-    }
-  };
-
-  vector<Cell> MinYPrefix(n + 1);
-  MinYPrefix[0].dq[0].second = -1e9;
+  vector<int> MinYPrefix(n + 1, inf);
+  MinYPrefix[0] = -inf;
 
   int r = 0;
 
-  map<pair<int, int>, int> point_dp;
+  vector<vector<int>> match_dp(n);
+  REP(i, n) match_dp[i].resize(matches[i].size());
   
   REP(i, n) {
-    for (auto jt = matches[i].rbegin();
-	 jt != matches[i].rend();
-	 ++jt) {
-
-      // nadji match na koji se mogu nastavit, dakle
-      // gledam MinYPrefix iz iteracije i - k, pozicije
-      // manje ili jednake *jt - k.
-
-      int lo = 0, hi = n;
-      while (lo < hi) {
-	int mid = (lo + hi) / 2;
-	if (MinYPrefix[mid].get_old(i - k) < *jt - k + 1)
-	  lo = mid + 1;
-	else
-	  hi = mid;
-      }
-
-      int l = lo - 1;
+    int cont_ptr = (i == 0 ? 0 : matches[i-1].size()) - 1;
+    for (int jt = (int)matches[i].size()-1; jt >= 0; --jt) {
+      int j = matches[i][jt];
+      int l = match_dp[i][jt];
 
       // probam popravit trenutni MinYPrefix.
-
       for (int s = 1; s <= k; ++s) {
-        if (*jt < MinYPrefix[l + s].get_new())
-          MinYPrefix[l + s].set(i, *jt);
+        MinYPrefix[l + s] = min(MinYPrefix[l + s], j);
       }
       int my_dp = l+k;
-      r = max(r, l + k);
 
       if (i > 0) {
-        if (point_dp.count(make_pair(i-1, *jt-1))) {
-          int new_dp = point_dp[make_pair(i-1, *jt-1)] + 1;
+        while (cont_ptr >= 0 && matches[i-1][cont_ptr] > j-1) cont_ptr--;
+        if (cont_ptr >= 0 && matches[i-1][cont_ptr] == j-1) {
+          int new_dp = match_dp[i-1][cont_ptr] + 1;
           if (new_dp > my_dp) {
             my_dp = new_dp;
-            if (*jt < MinYPrefix[new_dp].get_new())
-              MinYPrefix[new_dp].set(i, *jt);
+            MinYPrefix[new_dp] = min(MinYPrefix[new_dp], j);
           }
-          if (my_dp == r+1) r++;
         }
       }
 
-      point_dp[{i, *jt}] = my_dp;
+      r = max(r, my_dp);
+      match_dp[i][jt] = my_dp;
     }
 
-    REP(j, n) {
-      // provjeri monotonost
-      assert(MinYPrefix[j].get_new() <= MinYPrefix[j+1].get_new());
+    if (i + k < n) {
+      // napravi bs za matcheve iz iteracije i+k
+      for (int jt = (int)matches[i+k].size()-1; jt >= 0; --jt) {
+        int j = matches[i+k][jt]; 
+
+        int lo = 0, hi = n; // hi se moze smanjit
+        while (lo < hi) {
+          int mid = (lo + hi) / 2;
+          if (MinYPrefix[mid] < j - k + 1)
+            lo = mid + 1;
+          else
+            hi = mid;
+        }
+
+        match_dp[i+k][jt] = lo-1;
+      }
     }
   }
-
+  
   return r;
 }
 
@@ -174,16 +149,13 @@ int lcskpp_pavetic(const string& A, const string& B, int k, const vector<vector<
     }
   }
 
-  int best_idx = 0;
   int lcskpp_length = 0;
     
   for (auto event = events.begin(); 
        event != events.end(); ++event) {
     int idx = get<2>(*event) % matches.size();
-    bool is_beginning = (get<2>(*event) >= matches.size());
-    int i = get<0>(*event);
+    bool is_beginning = (get<2>(*event) >= (int)matches.size());
     int j = get<1>(*event);
-    int primary_diagonal = n-1+i-j;
 
     if (is_beginning) { // begin
       pair<int, int> prev_dp = dp_col_max.get(j);
@@ -206,7 +178,6 @@ int lcskpp_pavetic(const string& A, const string& B, int k, const vector<vector<
 
       if (dp[idx] > lcskpp_length) {
 	lcskpp_length = dp[idx];
-	best_idx = idx;
       }
     }
   }
