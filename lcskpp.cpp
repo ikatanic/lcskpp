@@ -266,6 +266,75 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<
   return lcskpp_length;
 }
 
+int lcskpp_pavetic_jos_ubrzan(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
+  vector<pair<int, int>> matches;
+  for (int i = 0; i < (int)matches_buckets.size(); ++i) {
+    for (int j : matches_buckets[i]) {
+      matches.push_back({i, j});
+    }
+  }
+  
+  vector<tuple<int, int, int> > events;
+  events.reserve(matches.size());
+
+  int n = 0;
+  for (auto it = matches.begin(); it != matches.end(); ++it) {
+    int idx = it - matches.begin();
+    events.push_back(make_tuple(it->first, it->second, idx)); // end
+    
+    n = max(n, it->first+k);
+    n = max(n, it->second+k);
+  }
+
+  // Indexed by column, first:dp value, second:index in matches.
+  FenwickMax<int> dp_col_max(n);
+  vector<int> dp(matches.size());
+  vector<int> continues(matches.size(), -1);
+  if (k > 1) {
+    for (auto curr = matches.begin(); 
+         curr != matches.end(); ++curr) {
+      auto G = make_pair(curr->first-1, curr->second-1);
+      auto prev = lower_bound(matches.begin(), matches.end(), G);
+      if (*prev == G) {
+	continues[curr-matches.begin()] = prev-matches.begin();
+      }
+    }
+  }
+
+  int lcskpp_length = 0;
+
+  for (auto event = events.begin(), bp = events.begin(); 
+       event != events.end(); ++event) {
+
+    while (get<0>(*bp) <= get<0>(*event) - k) {
+      int idx, j;
+      tie(ignore, j, idx) = *bp;
+      dp_col_max.update(j, dp[idx]);
+      ++bp;
+    }
+
+    int i, j, idx;
+    tie(i, j, idx) = *event;
+
+    dp[idx] = k;
+
+    if (continues[idx] != -1) 
+      dp[idx] = max(dp[idx], dp[continues[idx]] + 1);
+
+    if (j >= k) {
+      int val = dp_col_max.get(j - k);
+      if (val > 0)
+	dp[idx] = max(dp[idx], val + k);
+    }
+
+    lcskpp_length = max(lcskpp_length, dp[idx]);
+  }
+  
+  return lcskpp_length;
+}
+
+
+
 
 typedef function<int (const string&, const string&, int, const vector<vector<int>>&)> solver_t;
 
@@ -273,7 +342,8 @@ map<string, solver_t> solvers = {
   {"dp", lcskpp_dp},
   {"better?", lcskpp_better},
   {"pavetic", lcskpp_pavetic},
-  {"pavetic_ubrzan", lcskpp_pavetic_ubrzan}
+  {"pavetic_ubrzan", lcskpp_pavetic_ubrzan},
+  {"pavetic_jos_ubrzan", lcskpp_pavetic_jos_ubrzan}
 };
 
 string gen_random_string(int n, int sigma) {
