@@ -268,22 +268,14 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<
 
 int lcskpp_pavetic_jos_ubrzan(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
   vector<pair<int, int>> matches;
-  for (int i = 0; i < (int)matches_buckets.size(); ++i) {
-    for (int j : matches_buckets[i]) {
+  for (int i = 0; i < (int)matches_buckets.size(); ++i) 
+    for (int j : matches_buckets[i]) 
       matches.push_back({i, j});
-    }
-  }
-  
-  vector<tuple<int, int, int> > events;
-  events.reserve(matches.size());
 
   int n = 0;
   for (auto it = matches.begin(); it != matches.end(); ++it) {
-    int idx = it - matches.begin();
-    events.push_back(make_tuple(it->first, it->second, idx)); // end
-    
-    n = max(n, it->first+k);
-    n = max(n, it->second+k);
+    n = max(n, it->first);
+    n = max(n, it->second);
   }
 
   // Indexed by column, first:dp value, second:index in matches.
@@ -303,18 +295,18 @@ int lcskpp_pavetic_jos_ubrzan(const string& A, const string& B, int k, const vec
 
   int lcskpp_length = 0;
 
-  for (auto event = events.begin(), bp = events.begin(); 
-       event != events.end(); ++event) {
+  for (auto event = matches.begin(), bp = matches.begin(); 
+       event != matches.end(); ++event) {
 
-    while (get<0>(*bp) <= get<0>(*event) - k) {
-      int idx, j;
-      tie(ignore, j, idx) = *bp;
+    while (bp->first <= event->first - k) {
+      int idx = bp - matches.begin(), j = bp->second;
       dp_col_max.update(j, dp[idx]);
       ++bp;
     }
 
-    int i, j, idx;
-    tie(i, j, idx) = *event;
+    int i = event->first;
+    int j = event->second;
+    int idx = event - matches.begin();
 
     dp[idx] = k;
 
@@ -329,12 +321,10 @@ int lcskpp_pavetic_jos_ubrzan(const string& A, const string& B, int k, const vec
 
     lcskpp_length = max(lcskpp_length, dp[idx]);
   }
+
   
   return lcskpp_length;
 }
-
-
-
 
 typedef function<int (const string&, const string&, int, const vector<vector<int>>&)> solver_t;
 
