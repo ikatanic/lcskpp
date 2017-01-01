@@ -311,24 +311,16 @@ int lcskpp_pavetic(const string& A, const string& B, int k, const vector<vector<
 
 int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
   vector<pair<int, int>> matches;
+
+  int n = 0;
   for (int i = 0; i < (int)matches_buckets.size(); ++i) {
     for (int j : matches_buckets[i]) {
       matches.push_back({i, j});
+      n = max(n, i);
+      n = max(n, j);
     }
   }
   
-  vector<tuple<int, int, int> > events;
-  events.reserve(matches.size());
-
-  int n = 0;
-  for (auto it = matches.begin(); it != matches.end(); ++it) {
-    int idx = it - matches.begin();
-    events.push_back(make_tuple(it->first, it->second, idx)); // end
-    
-    n = max(n, it->first+k);
-    n = max(n, it->second+k);
-  }
-
   // Indexed by column, first:dp value, second:index in matches.
   FenwickMax<pair<int, int> > dp_col_max(n);
   vector<int> dp(matches.size());
@@ -348,20 +340,18 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<
   int best_idx = 0;
   int lcskpp_length = 0;
 
-  for (auto event = events.begin(), bp = events.begin(); 
-       event != events.end(); ++event) {
+  for (auto event = matches.begin(), bp = matches.begin(); 
+       event != matches.end(); ++event) {
 
-    while (get<0>(*bp) <= get<0>(*event) - k) {
-      int idx = get<2>(*bp);
-      int i = get<0>(*bp);
-      int j = get<1>(*bp);
+    while (bp->first <= event->first - k) {
+      int idx = bp - matches.begin(), j = bp->second;
       dp_col_max.update(j, make_pair(dp[idx], idx));
       ++bp;
     }
-    
-    int idx = get<2>(*event);
-    int i = get<0>(*event);
-    int j = get<1>(*event);
+
+    int i = event->first;
+    int j = event->second;
+    int idx = event - matches.begin();
 
     dp[idx] = k;
     recon[idx] = -1;
@@ -390,7 +380,7 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<
   return lcskpp_length;
 }
 
-int lcskpp_pavetic_jos_ubrzan(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
+int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
   vector<pair<int, int>> matches;
 
   int n = 0;
@@ -459,7 +449,7 @@ map<string, solver_t> solvers = {
   {"better_kuo_cross", lcskpp_better_kuo_cross},
   {"pavetic", lcskpp_pavetic},
   {"pavetic_ubrzan", lcskpp_pavetic_ubrzan},
-  {"pavetic_jos_ubrzan", lcskpp_pavetic_jos_ubrzan}
+  {"pavetic_ubrzan_no_recon", lcskpp_pavetic_ubrzan_no_recon}
 };
 
 string gen_random_string(int n, int sigma) {
@@ -474,6 +464,7 @@ int main(void) {
   map<string, double> times;
 
   int T = 20;
+  double match_time = 0.0;
   REP(t, T) {
     int N = 100000;
     int S = 4;
@@ -483,7 +474,9 @@ int main(void) {
     string A = gen_random_string(N, S);
     string B = gen_random_string(N, S);
 
+    match_time -= clock();
     auto matches = calc_matches(A, B, k);
+    match_time += clock();
     int lcskpp_len = lcskpp_pavetic(A, B, k, matches);
     
     for (auto& solver : solvers) {
@@ -500,6 +493,8 @@ int main(void) {
     printf("done %d/%d (N = %d, k = %d, sigma = %d)\n", t+1, T, N, k, S);
   }
   printf("\n\n");
+
+  printf("calc_matches: %.6lf\n", match_time / CLOCKS_PER_SEC / T);
   
   for (auto& time: times) {
     time.second /= CLOCKS_PER_SEC;
