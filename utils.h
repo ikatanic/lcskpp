@@ -161,6 +161,53 @@ vector<vector<int>> calc_matches(const string& a, const string& b, int k) {
   return matches;
 }
 
+vector<vector<int>> calc_matches2(const string& a, const string& b, int k) {
+  const int shift = 1 << 30;
+
+  // First, remap characters to interval [0, c>
+  auto mapping = remap_characters(a, b);
+  vector<int> map = mapping.first;
+  int sigma = mapping.second;
+
+  uint64_t sigma_to_k = 1;
+  for (int i = 0; i < k; ++i) {
+    sigma_to_k *= sigma;
+  }
+
+  vector<pair<uint64_t, int>> hashes;
+  uint64_t current_hash = 0;
+  for (int i = 0; i < (int)a.size(); ++i) {
+    current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
+    if (i >= k-1) hashes.push_back({current_hash, i});
+  }
+
+  current_hash = 0;
+
+  for (int i = 0; i < (int)b.size(); ++i) {
+    current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
+    if (i >= k-1) hashes.push_back({current_hash, i + shift});
+  }
+
+  radix_sort(hashes);
+  
+  vector<vector<int>> matches(a.size());
+
+  int sz = hashes.size();
+  for (int i = 0, j = 0; i < sz; i = j) {
+    for (j = i + 1; j < sz && hashes[j].first == hashes[i].first; ++j);
+    if (j - i <= 1) continue;
+
+    int s = i;
+    while (s < j && hashes[s].second < shift) ++s;
+
+    FOR(k1, i, s) FOR(k2, s, j)
+      matches[hashes[k1].second].push_back(hashes[k2].second - shift);
+  }
+  
+  return matches;
+}
+
+
 
 // k-matchevi u O(nm), matches[i] sadrzi j, ako X[i-k+1,i] == Y[j-k+1,j]
 vector<vector<int>> calc_matches_slow(const string &a, const string &b, int k) {

@@ -311,7 +311,7 @@ int lcskpp_pavetic(const string& A, const string& B, int k) {
 }
 
 int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
-  vector<vector<int>> matches_buckets = calc_matches(A, B, k);
+  vector<vector<int>> matches_buckets = calc_matches2(A, B, k);
   vector<pair<int, int>> matches;
 
   int n = 0;
@@ -455,9 +455,25 @@ map<string, solver_t> solvers = {
   {"pavetic_ubrzan_no_recon", lcskpp_pavetic_ubrzan_no_recon}
 };
 
+bool indicator(double p) {
+  int r = rand() % 2;
+  if (p >= 0.5) 
+    return r ? indicator(2 * p - 1) : true;
+  else
+    return r ? false : indicator(2 * p);
+}
+
 string gen_random_string(int n, int sigma) {
   string ret;
   REP(i, n) ret.push_back((rand() % sigma) + 'A');
+  return ret;
+}
+
+string gen_with_similarity(const string &base, int sigma, double p) {
+  string ret = base;
+  REP(i, (int)ret.size())
+    if (!indicator(p))
+      ret[i] = (rand() % sigma) + 'A';
   return ret;
 }
 
@@ -472,10 +488,11 @@ int main(void) {
     int N = 100000;
     int S = 4;
     //    int k = rand() % 5 + 4;
-    int k = 10;
+    int k = 20;
     
     string A = gen_random_string(N, S);
-    string B = gen_random_string(N, S);
+    // string B = gen_random_string(N, S);
+    string B = gen_with_similarity(A, S, 0.9);
 
     // match_time -= clock();
     // auto matches = calc_matches(A, B, k);
