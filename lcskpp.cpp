@@ -21,7 +21,8 @@ typedef long long llint;
 const int inf = 1e9;
 
 // obican dp: O(nmk)
-int lcskpp_dp(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
+int lcskpp_dp(const string& a, const string& b, int k) {
+  vector<vector<int>> matches = calc_matches(a, b, k);
   int n = a.size();
   int m = b.size();
 
@@ -46,7 +47,8 @@ int lcskpp_dp(const string& a, const string& b, int k, const vector<vector<int>>
 }
 
 
-int lcskpp_better_hunt(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
+int lcskpp_better_hunt(const string& a, const string& b, int k) {
+  vector<vector<int>> matches = calc_matches(a, b, k);
   int n = a.size();
   //  int m = b.size();
 
@@ -108,7 +110,8 @@ int lcskpp_better_hunt(const string& a, const string& b, int k, const vector<vec
   return r;
 }
 
-int lcskpp_better_hunt2(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
+int lcskpp_better_hunt2(const string& a, const string& b, int k) {
+  vector<vector<int>> matches = calc_matches(a, b, k);
   int n = a.size();
   //  int m = b.size();
 
@@ -179,7 +182,8 @@ int lcskpp_better_hunt2(const string& a, const string& b, int k, const vector<ve
   return r;
 }
 
-int lcskpp_better_kuo_cross(const string& a, const string& b, int k, const vector<vector<int>>& matches) {
+int lcskpp_better_kuo_cross(const string& a, const string& b, int k) {
+  vector<vector<int>> matches = calc_matches(a, b, k);
   int n = a.size();
   //  int m = b.size();
 
@@ -234,7 +238,8 @@ int lcskpp_better_kuo_cross(const string& a, const string& b, int k, const vecto
 }
 
 // iz papera, modificiran malo
-int lcskpp_pavetic(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
+int lcskpp_pavetic(const string& A, const string& B, int k) {
+  vector<vector<int>> matches_buckets = calc_matches(A, B, k);
   vector<pair<int, int>> matches;
   for (int i = 0; i < (int)matches_buckets.size(); ++i) {
     for (int j : matches_buckets[i]) {
@@ -309,7 +314,8 @@ int lcskpp_pavetic(const string& A, const string& B, int k, const vector<vector<
   return lcskpp_length;
 }
 
-int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
+int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
+  vector<vector<int>> matches_buckets = calc_matches(A, B, k);
   vector<pair<int, int>> matches;
 
   int n = 0;
@@ -380,7 +386,8 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k, const vector<
   return lcskpp_length;
 }
 
-int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k, const vector<vector<int>>& matches_buckets) {
+int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k) {
+  vector<vector<int>> matches_buckets = calc_matches(A, B, k);
   vector<pair<int, int>> matches;
 
   int n = 0;
@@ -440,7 +447,7 @@ int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k, cons
   return lcskpp_length;
 }
 
-typedef function<int (const string&, const string&, int, const vector<vector<int>>&)> solver_t;
+typedef function<int (const string&, const string&, int)> solver_t;
 
 map<string, solver_t> solvers = {
   //  {"dp", lcskpp_dp},
@@ -474,14 +481,14 @@ int main(void) {
     string A = gen_random_string(N, S);
     string B = gen_random_string(N, S);
 
-    match_time -= clock();
-    auto matches = calc_matches(A, B, k);
-    match_time += clock();
-    int lcskpp_len = lcskpp_pavetic(A, B, k, matches);
+    // match_time -= clock();
+    // auto matches = calc_matches(A, B, k);
+    // match_time += clock();
+    int lcskpp_len = lcskpp_pavetic(A, B, k);
     
     for (auto& solver : solvers) {
       times[solver.first] -= clock();
-      int solver_lcskpp_len = solver.second(A, B, k, matches);
+      int solver_lcskpp_len = solver.second(A, B, k);
       times[solver.first] += clock();
       if (solver_lcskpp_len != lcskpp_len) {
         puts("BUG");
@@ -494,7 +501,7 @@ int main(void) {
   }
   printf("\n\n");
 
-  printf("calc_matches: %.6lf\n", match_time / CLOCKS_PER_SEC / T);
+  // printf("calc_matches: %.6lf\n", match_time / CLOCKS_PER_SEC / T);
   
   for (auto& time: times) {
     time.second /= CLOCKS_PER_SEC;
