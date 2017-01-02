@@ -37,66 +37,6 @@ pair<vector<int>, int> remap_characters(const string& a, const string& b) {
   return {char_id, char_idx};
 }
 
-static void get_matches_pavetic(
-    const string& a, const string& b,
-    const int k, vector<pair<int, int> >* matches) {
-  assert(matches != NULL);
-  matches->clear();
-
-  auto mapping = remap_characters(a, b);
-  vector<int> aid = mapping.first;
-  int alphabet_size = mapping.second;
-
-  // We assume: alphabet_size ** k < 2 ** 64,
-  // in the case this does not hold, the entire
-  // get_matches function probably has to be
-  // reimplemented using non-perfect hashing or
-  // suffix arrays.
-  if (k * log(alphabet_size) >= 64 * log(2)) {
-    fprintf(stderr, "We assume that alphabet_size ** k <\
-2 ** 64.\nPlease see lcskpp.cpp for more information.");
-    exit(1);
-  }
-
-  typedef unordered_multimap<uint64_t, int> MatchIndexType;
-  unique_ptr<MatchIndexType> match_index =
-    unique_ptr<MatchIndexType>(new MatchIndexType());
-
-  uint64_t hash_mod = 1;
-  for (int i = 0; i < k; ++i) hash_mod *= alphabet_size;
-
-  if (alphabet_size == 4) {
-    assert(hash_mod == (1LL<<(2*k)));
-  }
-
-  uint64_t rolling_hash = 0;
-  for (int i = 0; i < a.size(); ++i) {
-    rolling_hash = rolling_hash * alphabet_size + aid[a[i]];
-    rolling_hash %= hash_mod;
-
-    if (i+1 >= k) {
-      match_index->insert(
-        MatchIndexType::value_type(rolling_hash, i-k+1));
-    }
-  }
-
-  rolling_hash = 0;
-  for (int i = 0; i < b.size(); ++i) {
-    rolling_hash = rolling_hash * alphabet_size + aid[b[i]];
-    rolling_hash %= hash_mod;
-
-    if (i+1 >= k) {
-      auto positions_in_a = match_index->equal_range(rolling_hash);
-      for (auto it = positions_in_a.first; 
-           it != positions_in_a.second; ++it) {
-        matches->push_back(make_pair(it->second, i-k+1));
-      }
-    }
-  }
-
-  sort(matches->begin(), matches->end());
-}
-
 // Assumes v is sorted by _.second and only the
 // first 40 bits of _.first are significant.
 void radix_sort(vector<pair<uint64_t, int>> &v) {

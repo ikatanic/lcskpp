@@ -8,6 +8,7 @@
 #include <map>
 #include <queue>
 #include "utils.h"
+#include "pavetic.h"
 
 using namespace std;
 
@@ -237,77 +238,10 @@ int lcskpp_better_kuo_cross(const string& a, const string& b, int k) {
   return r;
 }
 
-// iz papera, modificiran malo
 int lcskpp_pavetic(const string& A, const string& B, int k) {
-  // vector<vector<int>> matches_buckets = calc_matches(A, B, k);
-  vector<pair<int, int>> matches;
-  get_matches_pavetic(A, B, k, &matches);
-  
-  vector<tuple<int, int, int> > events;
-  events.reserve(2*matches.size());
-
-  int n = 0;
-  for (auto it = matches.begin(); it != matches.end(); ++it) {
-    int idx = it - matches.begin();
-    events.push_back(make_tuple(it->first, it->second, 
-				idx+matches.size())); // begin
-    events.push_back(make_tuple(it->first+k, it->second+k, idx)); // end
-    
-    n = max(n, it->first+k);
-    n = max(n, it->second+k);
-  }
-  sort(events.begin(), events.end());
-
-  // Indexed by column, first:dp value, second:index in matches.
-  FenwickMax<pair<int, int> > dp_col_max(n);
-  vector<int> dp(matches.size());
-  vector<int> recon(matches.size());
-  vector<int> continues(matches.size(), -1);
-  if (k > 1) {
-    for (auto curr = matches.begin(); 
-         curr != matches.end(); ++curr) {
-      auto G = make_pair(curr->first-1, curr->second-1);
-      auto prev = lower_bound(matches.begin(), matches.end(), G);
-      if (*prev == G) {
-	continues[curr-matches.begin()] = prev-matches.begin();
-      }
-    }
-  }
-
-  int lcskpp_length = 0;
-    
-  for (auto event = events.begin(); 
-       event != events.end(); ++event) {
-    int idx = get<2>(*event) % matches.size();
-    bool is_beginning = (get<2>(*event) >= (int)matches.size());
-    int j = get<1>(*event);
-
-    if (is_beginning) { // begin
-      pair<int, int> prev_dp = dp_col_max.get(j);
-      dp[idx] = k;
-      recon[idx] = -1;
-
-      if (prev_dp.first > 0) {
-	dp[idx] = prev_dp.first + k;
-	recon[idx] = prev_dp.second;
-      }
-    } else {
-      if (continues[idx] != -1) {
-	if (dp[continues[idx]] + 1 > dp[idx]) {
-	  dp[idx] = dp[continues[idx]] + 1;
-	  recon[idx] = continues[idx];
-	}
-      }
-
-      dp_col_max.update(j, make_pair(dp[idx], idx));
-
-      if (dp[idx] > lcskpp_length) {
-	lcskpp_length = dp[idx];
-      }
-    }
-  }
-  
-  return lcskpp_length;
+  int ret;
+  Pavetic::lcskpp(A, B, k, &ret, NULL);
+  return ret;
 }
 
 double t_matches;
