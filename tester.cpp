@@ -112,6 +112,11 @@ int main(int argc, char **argv)
   int p_lo = argc == 5 ? atoi(argv[3]) : 40;
   int p_hi = argc == 5 ? atoi(argv[4]) : 90;
 
+  puts("Znakovi:");
+  for (auto it : codes)
+    printf("%c : %s\n", it.second, it.first.c_str());
+  puts("");
+
   printf("  ");
   for (int p = p_lo; p <= p_hi; p += 10)
     printf("% 10d%%", p);
