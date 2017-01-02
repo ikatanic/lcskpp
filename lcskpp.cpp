@@ -239,13 +239,9 @@ int lcskpp_better_kuo_cross(const string& a, const string& b, int k) {
 
 // iz papera, modificiran malo
 int lcskpp_pavetic(const string& A, const string& B, int k) {
-  vector<vector<int>> matches_buckets = calc_matches(A, B, k);
+  // vector<vector<int>> matches_buckets = calc_matches(A, B, k);
   vector<pair<int, int>> matches;
-  for (int i = 0; i < (int)matches_buckets.size(); ++i) {
-    for (int j : matches_buckets[i]) {
-      matches.push_back({i, j});
-    }
-  }
+  get_matches_pavetic(A, B, k, &matches);
   
   vector<tuple<int, int, int> > events;
   events.reserve(2*matches.size());
