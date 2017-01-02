@@ -44,7 +44,7 @@ map<string, char> codes = {
 
 
 pair<string, double> run(int k, double p) {
-  const int IT = 5;
+  const int IT = 20;
   
   srand(p * 1000000 + k); 
   
@@ -61,10 +61,10 @@ pair<string, double> run(int k, double p) {
       int solver_lcskpp_len = solver.second(A, B, k);
       t += clock();
 
-      if (solver.first == "pavetic" && it)
+      if (it)
 	times[solver.first] = min(times[solver.first], t);
       else
-	times[solver.first] = max(times[solver.first], t);
+	times[solver.first] = t;
 
       if (solver_lcskpp_len != lcskpp_len) {
 	puts("BUG");
