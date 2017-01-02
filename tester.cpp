@@ -90,8 +90,12 @@ pair<string, double> run(int k, double p) {
 
 enum { BLACK, RED, GREEN, YELLOW, BLUE };
 
-void color_putchar(int color, char c) {
-  printf("\x1B[%dm%c", 30 + color, c);
+void set_color(int color) {
+  printf("\x1B[%dm", 30 + color);
+}
+
+void clear_color() {
+  printf("\x1B[0m");
 }
 
 int main(int argc, char **argv)
@@ -108,20 +112,21 @@ int main(int argc, char **argv)
   int p_lo = argc == 5 ? atoi(argv[3]) : 40;
   int p_hi = argc == 5 ? atoi(argv[4]) : 90;
 
-  printf("    ");
+  printf("  ");
   for (int p = p_lo; p <= p_hi; p += 10)
-    printf("% 4d%%", p);
+    printf("% 10d%%", p);
   puts("");
 
   FOR(k, k_lo, k_hi + 1) {
-    printf("\x1B[0m");
+    clear_color();
     printf("% 3d:   ", k);
     for (int p = p_lo; p <= p_hi; p += 10) {
       string winner; double factor;
       tie(winner, factor) = run(k, p / 100.0);
       int color = (factor < 3.0) ? RED : GREEN;
-      color_putchar(color, codes[winner]);
-      printf("    ");
+      set_color(color);
+      printf("%c[%.3lf] ", codes[winner], factor);
+      printf("  ");
     }
     puts(""); puts("");
   }
