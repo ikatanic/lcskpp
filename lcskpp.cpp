@@ -244,14 +244,9 @@ int lcskpp_pavetic(const string& A, const string& B, int k) {
   return ret;
 }
 
-double t_matches;
-double t_continues;
-double t_sweep;
 
 int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
-  t_matches -= clock();
   vector<vector<int>> matches_buckets = calc_matches2(A, B, k);
-  t_matches += clock();
   vector<pair<int, int>> matches;
 
   int n = 0;
@@ -268,7 +263,6 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
   vector<int> dp(matches.size());
   vector<int> recon(matches.size());
   vector<int> continues(matches.size(), -1);
-  t_continues -= clock();
 
   if (k > 1) {
     auto prev = matches.begin();
@@ -282,12 +276,8 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
     }
   }
 
-  t_continues += clock();
-
   int best_idx = 0;
   int lcskpp_length = 0;
-
-  t_sweep -= clock();
 
   for (auto event = matches.begin(), bp = matches.begin(); 
        event != matches.end(); ++event) {
@@ -326,8 +316,6 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
     }
   }
 
-  t_sweep += clock();
-  
   return lcskpp_length;
 }
 
@@ -395,84 +383,4 @@ int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k) {
   return lcskpp_length;
 }
 
-typedef function<int (const string&, const string&, int)> solver_t;
-
-map<string, solver_t> solvers = {
-  //  {"dp", lcskpp_dp},
-  {"better_hunt", lcskpp_better_hunt},
-  {"better_hunt2", lcskpp_better_hunt2},
-  {"better_kuo_cross", lcskpp_better_kuo_cross},
-  {"pavetic", lcskpp_pavetic},
-  {"pavetic_ubrzan", lcskpp_pavetic_ubrzan},
-  {"pavetic_ubrzan_no_recon", lcskpp_pavetic_ubrzan_no_recon}
-};
-
-bool indicator(double p) {
-  int r = rand() % 2;
-  if (p >= 0.5) 
-    return r ? indicator(2 * p - 1) : true;
-  else
-    return r ? false : indicator(2 * p);
-}
-
-string gen_random_string(int n, int sigma) {
-  string ret;
-  REP(i, n) ret.push_back((rand() % sigma) + 'A');
-  return ret;
-}
-
-string gen_with_similarity(const string &base, int sigma, double p) {
-  string ret = base;
-  REP(i, (int)ret.size())
-    if (!indicator(p))
-      ret[i] = (rand() % sigma) + 'A';
-  return ret;
-}
-
-int main(void) {
-  srand(123456789);
-
-  map<string, double> times;
-
-  int T = 20;
-  double match_time = 0.0;
-  REP(t, T) {
-    int N = 10000;
-    int S = 4;
-    //    int k = rand() % 5 + 4;
-    int k = 5;
-    
-    string A = gen_random_string(N, S);
-    string B = gen_with_similarity(A, S, 0.9);
-
-    int lcskpp_len = lcskpp_pavetic(A, B, k);
-    
-    for (auto& solver : solvers) {
-      times[solver.first] -= clock();
-      int solver_lcskpp_len = solver.second(A, B, k);
-      times[solver.first] += clock();
-      if (solver_lcskpp_len != lcskpp_len) {
-        puts("BUG");
-        TRACE(A _ B _ k);
-        TRACE(lcskpp_len _ solver.first _ solver_lcskpp_len);
-        return 0;
-      }
-    }
-    printf("done %d/%d (N = %d, k = %d, sigma = %d)\n", t+1, T, N, k, S);
-  }
-  printf("\n\n");
-
-  double tot = t_matches + t_continues + t_sweep;
-  printf("matches: %.5lf%%\n", t_matches/tot*100);
-  printf("continues: %.5lf%%\n", t_continues/tot*100);
-  printf("rest: %.5lf%%\n", t_sweep/tot*100);
-
-  for (auto& time: times) {
-    time.second /= CLOCKS_PER_SEC;
-    time.second /= T;
-    printf("%s -> %.6lf\n", time.first.c_str(), time.second);
-  }
-  
-  return 0;
-}
 

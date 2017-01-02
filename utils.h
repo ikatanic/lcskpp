@@ -16,7 +16,27 @@
 
 using namespace std;
 
+bool indicator(double p) {
+  int r = rand() % 2;
+  if (p >= 0.5)
+    return r ? indicator(2 * p - 1) : true;
+  else
+    return r ? false : indicator(2 * p);
+}
 
+string gen_random_string(int n, int sigma) {
+  string ret;
+  REP(i, n) ret.push_back((rand() % sigma) + 'A');
+  return ret;
+}
+
+string gen_with_similarity(const string &base, int sigma, double p) {
+  string ret = base;
+  REP(i, (int)ret.size())
+    if (!indicator(p))
+      ret[i] = (rand() % sigma) + 'A';
+  return ret;
+}
 
 // Maps characters found in strings a and b to interval [0, S>, where S is
 // number of unique characters.
