@@ -310,8 +310,14 @@ int lcskpp_pavetic(const string& A, const string& B, int k) {
   return lcskpp_length;
 }
 
+double t_matches;
+double t_continues;
+double t_sweep;
+
 int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
+  t_matches -= clock();
   vector<vector<int>> matches_buckets = calc_matches2(A, B, k);
+  t_matches += clock();
   vector<pair<int, int>> matches;
 
   int n = 0;
@@ -328,19 +334,26 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
   vector<int> dp(matches.size());
   vector<int> recon(matches.size());
   vector<int> continues(matches.size(), -1);
+  t_continues -= clock();
+
   if (k > 1) {
+    auto prev = matches.begin();
     for (auto curr = matches.begin(); 
          curr != matches.end(); ++curr) {
       auto G = make_pair(curr->first-1, curr->second-1);
-      auto prev = lower_bound(matches.begin(), matches.end(), G);
+      while (*prev < G) ++prev;
       if (*prev == G) {
 	continues[curr-matches.begin()] = prev-matches.begin();
       }
     }
   }
 
+  t_continues += clock();
+
   int best_idx = 0;
   int lcskpp_length = 0;
+
+  t_sweep -= clock();
 
   for (auto event = matches.begin(), bp = matches.begin(); 
        event != matches.end(); ++event) {
@@ -363,7 +376,7 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
 	dp[idx] = dp[continues[idx]] + 1;
 	recon[idx] = continues[idx];
       }
-    }
+    } 
 
     if (j >= k) {
       pair<int, int> prev_dp = dp_col_max.get(j - k);
@@ -378,12 +391,14 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
       best_idx = idx;
     }
   }
+
+  t_sweep += clock();
   
   return lcskpp_length;
 }
 
 int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k) {
-  vector<vector<int>> matches_buckets = calc_matches(A, B, k);
+  vector<vector<int>> matches_buckets = calc_matches2(A, B, k);
   vector<pair<int, int>> matches;
 
   int n = 0;
@@ -399,16 +414,19 @@ int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k) {
   FenwickMax<int> dp_col_max(n);
   vector<int> dp(matches.size());
   vector<int> continues(matches.size(), -1);
+
   if (k > 1) {
+    auto prev = matches.begin();
     for (auto curr = matches.begin(); 
          curr != matches.end(); ++curr) {
       auto G = make_pair(curr->first-1, curr->second-1);
-      auto prev = lower_bound(matches.begin(), matches.end(), G);
+      while (*prev < G) ++prev;
       if (*prev == G) {
 	continues[curr-matches.begin()] = prev-matches.begin();
       }
     }
   }
+
 
   int lcskpp_length = 0;
 
@@ -485,18 +503,14 @@ int main(void) {
   int T = 20;
   double match_time = 0.0;
   REP(t, T) {
-    int N = 100000;
+    int N = 10000;
     int S = 4;
     //    int k = rand() % 5 + 4;
-    int k = 20;
+    int k = 5;
     
     string A = gen_random_string(N, S);
-    // string B = gen_random_string(N, S);
     string B = gen_with_similarity(A, S, 0.9);
 
-    // match_time -= clock();
-    // auto matches = calc_matches(A, B, k);
-    // match_time += clock();
     int lcskpp_len = lcskpp_pavetic(A, B, k);
     
     for (auto& solver : solvers) {
@@ -514,8 +528,11 @@ int main(void) {
   }
   printf("\n\n");
 
-  // printf("calc_matches: %.6lf\n", match_time / CLOCKS_PER_SEC / T);
-  
+  double tot = t_matches + t_continues + t_sweep;
+  printf("matches: %.5lf%%\n", t_matches/tot*100);
+  printf("continues: %.5lf%%\n", t_continues/tot*100);
+  printf("rest: %.5lf%%\n", t_sweep/tot*100);
+
   for (auto& time: times) {
     time.second /= CLOCKS_PER_SEC;
     time.second /= T;
