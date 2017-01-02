@@ -36,6 +36,31 @@ pair<vector<int>, int> remap_characters(const string& a, const string& b) {
 }
 
 
+// Assumes v is sorted by _.second and only the
+// first 40 bits of _.first are significant.
+void radix_sort(vector<pair<uint64_t, int>> &v) {
+  const int len = 14;
+  const int sz = 1 << len;
+  const int mask = sz - 1;
+  static int pos[sz + 1];
+
+  vector<pair<uint64_t, int>> w(v.size());
+
+  REP(block, 3) {
+    memset(pos, 0, sizeof pos);
+    
+    for (auto &x : v)
+      ++pos[((x.first >> (block * len)) & mask) + 1];
+
+    REP(i, sz)
+      pos[i + 1] += pos[i];
+
+    for (auto &x : v)
+      w[pos[(x.first >> (block * len)) & mask]++] = x;
+
+    v = w;
+  }
+}
 
 // Takes strings a and b as inputs. And small number k.
 // Returns lists of all k-matches.
@@ -58,7 +83,7 @@ vector<vector<int>> calc_matches(const string& a, const string& b, int k) {
     if (i >= k-1) b_hashes.push_back({current_hash, i});
   }
 
-  sort(b_hashes.begin(), b_hashes.end());
+  radix_sort(b_hashes);
   
   vector<vector<int>> matches(a.size());
   current_hash = 0;
