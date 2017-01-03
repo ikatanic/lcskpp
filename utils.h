@@ -267,34 +267,35 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     sigma_to_k *= sigma;
   }
 
-  const int P = 16;
-  vector<pair<uint64_t, int>> hashes[P];
+  const int P = 1<<4;
+  vector<uint64_t> hashes[P];
   uint64_t current_hash = 0;
   for (int i = 0; i < n; ++i) {
     current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
-    if (i >= k-1) hashes[current_hash % P].push_back({current_hash / P, i});
+    if (i >= k-1) hashes[current_hash % P].push_back(current_hash / P + (i*1LL << 40));
   }
 
   current_hash = 0;
 
   for (int i = 0; i < m; ++i) {
     current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
-    if (i >= k-1) hashes[current_hash % P].push_back({current_hash / P, i + n});
+    if (i >= k-1) hashes[current_hash % P].push_back(current_hash / P + ((i + n)*1LL << 40));
   }
 
+  uint64_t mask = (1LL<<40) - 1;
   for (int p = 0; p < P; ++p) {
     radix_sort(hashes[p]);
   
     int sz = hashes[p].size();
     for (int i = 0, j = 0; i < sz; i = j) {
-      for (j = i + 1; j < sz && (hashes[p][j].first) == (hashes[p][i].first); ++j);
+      for (j = i + 1; j < sz && (hashes[p][j]&mask) == (hashes[p][i]&mask); ++j);
       if (j - i <= 1) continue;
 
       int s = i;
-      while (s < j && hashes[p][s].second < n) ++s;
+      while (s < j && (hashes[p][s] >> 40) < n) ++s;
 
       FOR(k1, i, s) FOR(k2, s, j) {
-        matches->push_back({hashes[p][k1].second, hashes[p][k2].second - n});
+        matches->push_back({(hashes[p][k1]) >> 40, (hashes[p][k2] >> 40) - n});
       }
     }
   }
