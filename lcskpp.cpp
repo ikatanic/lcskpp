@@ -117,20 +117,6 @@ int lcskpp_better_hunt2(const string& a, const string& b, int k) {
   vector<pair<int, int>> matches;
   calc_matches(a, b, k, &matches);
 
-  if (matches.size() < n+m) {
-    sort(matches.begin(), matches.end());
-  } else {
-    vector<vector<int>> matches_buckets(n);
-    for (auto& p: matches) matches_buckets[p.first].push_back(p.second);
-    int ptr = 0;
-    REP(i, n) {
-      sort(matches_buckets[i].begin(), matches_buckets[i].end());
-      for (int j: matches_buckets[i]) {
-        matches[ptr++] = {i, j};
-      }
-    }
-  }
-
   int n_matches = matches.size();
   vector<int> MinYPrefix(m + 1, inf);
   MinYPrefix[0] = -inf;
@@ -212,20 +198,6 @@ int lcskpp_better_kuo_cross(const string& a, const string& b, int k) {
   vector<pair<int, int>> matches;
   calc_matches(a, b, k, &matches);
 
-  if (matches.size() < n+m) {
-    sort(matches.begin(), matches.end());
-  } else {
-    vector<vector<int>> matches_buckets(n);
-    for (auto& p: matches) matches_buckets[p.first].push_back(p.second);
-    int ptr = 0;
-    REP(i, n) {
-      sort(matches_buckets[i].begin(), matches_buckets[i].end());
-      for (int j: matches_buckets[i]) {
-        matches[ptr++] = {i, j};
-      }
-    }
-  }
-  
   int n_matches = matches.size();
   vector<int> MinYPrefix(m + 1, inf);
   MinYPrefix[0] = -inf;
@@ -293,8 +265,7 @@ int lcskpp_pavetic(const string& A, const string& B, int k) {
 int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
   vector<pair<int, int>> matches;
   calc_matches(A, B, k, &matches);
-  sort(matches.begin(), matches.end());
-  
+
   int n = 0;
   for (auto& p: matches) {
     n = max(n, max(p.first, p.second));
