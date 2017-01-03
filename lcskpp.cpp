@@ -23,7 +23,8 @@ const int inf = 1e9;
 
 // obican dp: O(nmk)
 int lcskpp_dp(const string& a, const string& b, int k) {
-  vector<vector<int>> matches = calc_matches(a, b, k);
+  vector<vector<int>> matches(a.size());
+  calc_matches_buckets(a, b, k, &matches);
   int n = a.size();
   int m = b.size();
 
@@ -49,9 +50,9 @@ int lcskpp_dp(const string& a, const string& b, int k) {
 
 
 int lcskpp_better_hunt(const string& a, const string& b, int k) {
-  vector<vector<int>> matches = calc_matches(a, b, k);
   int n = a.size();
-  //  int m = b.size();
+  vector<vector<int>> matches(n);
+  calc_matches_buckets(a, b, k, &matches);
 
 
   vector<int> MinYPrefix(n + 1, inf);
@@ -112,7 +113,8 @@ int lcskpp_better_hunt(const string& a, const string& b, int k) {
 }
 
 int lcskpp_better_hunt2(const string& a, const string& b, int k) {
-  vector<vector<int>> matches = calc_matches(a, b, k);
+  vector<vector<int>> matches(a.size());
+  calc_matches_buckets(a, b, k, &matches);
   int n = a.size();
   //  int m = b.size();
 
@@ -184,7 +186,8 @@ int lcskpp_better_hunt2(const string& a, const string& b, int k) {
 }
 
 int lcskpp_better_kuo_cross(const string& a, const string& b, int k) {
-  vector<vector<int>> matches = calc_matches(a, b, k);
+  vector<vector<int>> matches(a.size());
+  calc_matches_buckets(a, b, k, &matches);
   int n = a.size();
   //  int m = b.size();
 
@@ -246,16 +249,13 @@ int lcskpp_pavetic(const string& A, const string& B, int k) {
 
 
 int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
-  vector<vector<int>> matches_buckets = calc_matches2(A, B, k);
   vector<pair<int, int>> matches;
-
+  calc_matches(A, B, k, &matches);
+  sort(matches.begin(), matches.end());
+  
   int n = 0;
-  for (int i = 0; i < (int)matches_buckets.size(); ++i) {
-    for (int j : matches_buckets[i]) {
-      matches.push_back({i, j});
-      n = max(n, i);
-      n = max(n, j);
-    }
+  for (auto& p: matches) {
+    n = max(n, max(p.first, p.second));
   }
   
   // Indexed by column, first:dp value, second:index in matches.
@@ -320,18 +320,15 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
 }
 
 int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k) {
-  vector<vector<int>> matches_buckets = calc_matches2(A, B, k);
   vector<pair<int, int>> matches;
-
+  calc_matches(A, B, k, &matches);
+  sort(matches.begin(), matches.end());
+  
   int n = 0;
-  for (int i = 0; i < (int)matches_buckets.size(); ++i) {
-    for (int j : matches_buckets[i]) {
-      matches.push_back({i, j});
-      n = max(n, i);
-      n = max(n, j);
-    }
+  for (auto& p: matches) {
+    n = max(n, max(p.first, p.second));
   }
-
+  
   // Indexed by column, first:dp value, second:index in matches.
   FenwickMax<int> dp_col_max(n);
   vector<int> dp(matches.size());

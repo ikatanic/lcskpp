@@ -15,4 +15,12 @@ void lcskpp(
     const int k, int* lcskpp_length,
     std::vector<std::pair<int, int> >* lcskpp_reconstruction);
 
+ 
+void lcskpp(const vector<pair<int, int> >& matches,
+          const int k, int* lcskpp_length,
+            vector<pair<int, int> >* lcskpp_reconstruction);
+
+void get_matches(
+    const string& a, const string& b,
+    const int k, vector<pair<int, int> >* matches);
 }

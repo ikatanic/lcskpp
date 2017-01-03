@@ -78,7 +78,7 @@ static void prepare_alphabet(
 // would have to be reimplemented (for example by using
 // non-perfect hashing or suffix arrays) and everything else
 // should work again.
-static void get_matches(
+void get_matches(
     const string& a, const string& b,
     const int k, vector<pair<int, int> >* matches) {
   assert(matches != NULL);

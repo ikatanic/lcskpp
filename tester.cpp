@@ -44,7 +44,7 @@ map<string, char> codes = {
 
 
 pair<string, double> run(int k, double p) {
-  const int IT = 20;
+  const int IT = 5;
   
   srand(p * 1000000 + k); 
   
@@ -54,17 +54,13 @@ pair<string, double> run(int k, double p) {
   int lcskpp_len = lcskpp_pavetic(A, B, k);
 
   map<string, double> times;
-    
+  
   for (auto& solver : solvers) {
     REP(it, IT) {
       double t = -clock();
       int solver_lcskpp_len = solver.second(A, B, k);
       t += clock();
-
-      if (it)
-	times[solver.first] = min(times[solver.first], t);
-      else
-	times[solver.first] = t;
+      times[solver.first] += t / IT;
 
       if (solver_lcskpp_len != lcskpp_len) {
 	puts("BUG");
@@ -123,7 +119,6 @@ int main(int argc, char **argv)
   puts("");
 
   FOR(k, k_lo, k_hi + 1) {
-    clear_color();
     printf("% 3d:   ", k);
     for (int p = p_lo; p <= p_hi; p += 10) {
       string winner; double factor;
@@ -132,6 +127,7 @@ int main(int argc, char **argv)
       set_color(color);
       printf("%c[%.3lf] ", codes[winner], factor);
       printf("  ");
+      clear_color();
     }
     puts(""); puts("");
   }

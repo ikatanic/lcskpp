@@ -16,6 +16,36 @@
 
 using namespace std;
 
+template<class T>
+class FenwickMax {
+ public:
+  FenwickMax(size_t n) {
+    elements_ = std::vector<T> (n+1);
+  }
+  
+  void update(size_t pos, const T& val) {
+    ++pos;
+    for ( ; pos < elements_.size(); pos += lobit(pos)) {
+      elements_[pos] = std::max(elements_[pos], val);
+    }
+  }
+
+  T get(size_t pos) {
+    ++pos;
+    T ret = T();
+    for ( ; pos > 0; pos -= lobit(pos)) {
+      ret = std::max(ret, elements_[pos]);
+    }
+    return ret;
+  }
+
+ private:
+  size_t lobit(const size_t& a) { return a&-a; }
+  
+ private:
+  std::vector<T> elements_;
+};
+
 bool indicator(double p) {
   int r = rand() % 2;
   if (p >= 0.5)
@@ -60,14 +90,14 @@ pair<vector<int>, int> remap_characters(const string& a, const string& b) {
 // Assumes v is sorted by _.second and only the
 // first 40 bits of _.first are significant.
 void radix_sort(vector<pair<uint64_t, int>> &v) {
-  const int len = 14;
+  const int len = 10;
   const int sz = 1 << len;
   const int mask = sz - 1;
   static int pos[sz + 1];
 
   vector<pair<uint64_t, int>> w(v.size());
-
-  REP(block, 3) {
+  
+  REP(block, 4) {
     memset(pos, 0, sizeof pos);
     
     for (auto &x : v)
@@ -79,7 +109,33 @@ void radix_sort(vector<pair<uint64_t, int>> &v) {
     for (auto &x : v)
       w[pos[(x.first >> (block * len)) & mask]++] = x;
 
-    v = w;
+    v.swap(w);
+  }
+}
+
+// Assumes v is sorted by _.second and only the
+// first 40 bits of _.first are significant.
+void radix_sort(vector<uint64_t> &v) {
+  const int len = 10;
+  const int sz = 1 << len;
+  const int mask = sz - 1;
+  static int pos[sz + 1];
+
+  vector<uint64_t> w(v.size());
+
+  REP(block, 4) {
+    memset(pos, 0, sizeof pos);
+    
+    for (auto &x : v)
+      ++pos[((x >> (block * len)) & mask) + 1];
+
+    REP(i, sz)
+      pos[i + 1] += pos[i];
+
+    for (auto &x : v)
+      w[pos[(x >> (block * len)) & mask]++] = x;
+
+    v.swap(w);
   }
 }
 
@@ -189,32 +245,65 @@ vector<vector<int>> calc_matches_slow(const string &a, const string &b, int k) {
 }
 
 
-template<class T>
-class FenwickMax {
- public:
-  FenwickMax(size_t n) {
-    elements_ = std::vector<T> (n+1);
-  }
-  
-  void update(size_t pos, const T& val) {
-    ++pos;
-    for ( ; pos < elements_.size(); pos += lobit(pos)) {
-      elements_[pos] = std::max(elements_[pos], val);
+void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>>* matches) {
+  //  First, remap characters to interval [0, c>
+  vector<int> map(256, -1);
+  int sigma = 0;
+  int n = a.size();
+  int m = b.size();
+  for (int i = 0; i < n; ++i) {
+    if (map[a[i]] == -1) {
+      map[a[i]] = sigma++;
     }
   }
-
-  T get(size_t pos) {
-    ++pos;
-    T ret = T();
-    for ( ; pos > 0; pos -= lobit(pos)) {
-      ret = std::max(ret, elements_[pos]);
+  for (int i = 0; i < m; ++i) {
+    if (map[b[i]] == -1) {
+      map[b[i]] = sigma++;
     }
-    return ret;
+  }
+  
+  uint64_t sigma_to_k = 1;
+  for (int i = 0; i < k; ++i) {
+    sigma_to_k *= sigma;
   }
 
- private:
-  size_t lobit(const size_t& a) { return a&-a; }
+  const int P = 16;
+  vector<pair<uint64_t, int>> hashes[P];
+  uint64_t current_hash = 0;
+  for (int i = 0; i < n; ++i) {
+    current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
+    if (i >= k-1) hashes[current_hash % P].push_back({current_hash / P, i});
+  }
+
+  current_hash = 0;
+
+  for (int i = 0; i < m; ++i) {
+    current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
+    if (i >= k-1) hashes[current_hash % P].push_back({current_hash / P, i + n});
+  }
+
+  for (int p = 0; p < P; ++p) {
+    radix_sort(hashes[p]);
   
- private:
-  std::vector<T> elements_;
-};
+    int sz = hashes[p].size();
+    for (int i = 0, j = 0; i < sz; i = j) {
+      for (j = i + 1; j < sz && (hashes[p][j].first) == (hashes[p][i].first); ++j);
+      if (j - i <= 1) continue;
+
+      int s = i;
+      while (s < j && hashes[p][s].second < n) ++s;
+
+      FOR(k1, i, s) FOR(k2, s, j) {
+        matches->push_back({hashes[p][k1].second, hashes[p][k2].second - n});
+      }
+    }
+  }
+}
+
+
+void calc_matches_buckets(const string& a, const string& b, int k, vector<vector<int>>* matches) {
+  vector<pair<int, int>> matches_pairs;
+  calc_matches(a, b, k, &matches_pairs);
+  for (auto& p: matches_pairs) matches->at(p.first).push_back(p.second);
+}
+
