@@ -23,7 +23,7 @@ const int S = 4;
 typedef function<int (const string&, const string&, int)> solver_t;
 
 map<string, solver_t> solvers = {
-  //  {"dp", lcskpp_dp},
+  //{"dp", lcskpp_dp},
   {"better_hunt", lcskpp_better_hunt},
   {"better_hunt2", lcskpp_better_hunt2},
   {"better_kuo_cross", lcskpp_better_kuo_cross},
@@ -63,10 +63,10 @@ pair<string, double> run(int k, double p) {
       times[solver.first] += t / IT;
 
       if (solver_lcskpp_len != lcskpp_len) {
-	puts("BUG");
-	TRACE(A _ B _ k);
-	TRACE(lcskpp_len _ solver.first _ solver_lcskpp_len);
-	exit(0);
+        puts("BUG");
+        TRACE(A _ B _ k);
+        TRACE(lcskpp_len _ solver.first _ solver_lcskpp_len);
+        exit(0);
       }
     }
   }

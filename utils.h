@@ -273,47 +273,74 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     sigma_to_k *= sigma;
   }
 
-  const int P = 16;
-  vector<uint64_t> hashes[P];
-  uint64_t current_hash = 0;
-  for (int i = 0; i < n; ++i) {
-    current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
-    if (i >= k-1) hashes[current_hash % P].push_back(current_hash / P + (i*1LL << 40));
-  }
+  if (sigma_to_k <= (1<<12)) {
+    vector<vector<int>> hashes(sigma_to_k);
+    uint64_t current_hash = 0;
+    for (int i = 0; i < m; ++i) {
+      current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
+      if (i >= k-1) hashes[current_hash].push_back(i);
+    }
 
-  current_hash = 0;
 
-  for (int i = 0; i < m; ++i) {
-    current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
-    if (i >= k-1) hashes[current_hash % P].push_back(current_hash / P + ((i + n)*1LL << 40));
-  }
+    current_hash = 0;
+    for (int i = 0; i < n; ++i) {
+      current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
+      if (i >= k-1) {
+        for (int j : hashes[current_hash]) {
+          matches->push_back({i, j});
+        }
+      }
+    }
+  } else {
+    const int P = 16;
+    vector<uint64_t> hashes[P];
+    uint64_t current_hash = 0;
+    for (int i = 0; i < n; ++i) {
+      current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
+      if (i >= k-1) hashes[current_hash % P].push_back(current_hash / P + (i*1LL << 40));
+    }
 
-  uint64_t mask = (1LLU<<40) - 1;
-  for (int p = 0; p < P; ++p) {
-    radix_sort(hashes[p], sigma_to_k / P);
+    current_hash = 0;
+
+    for (int i = 0; i < m; ++i) {
+      current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
+      if (i >= k-1) hashes[current_hash % P].push_back(current_hash / P + ((i + n)*1LL << 40));
+    }
+
+    uint64_t mask = (1LLU<<40) - 1;
+    for (int p = 0; p < P; ++p) {
+      radix_sort(hashes[p], sigma_to_k / P);
   
-    int sz = hashes[p].size();
-    for (int i = 0, j = 0; i < sz; i = j) {
-      int s = 0;
-      for (j = i + 1; j < sz && (hashes[p][j]&mask) == (hashes[p][i]&mask); ++j);
-      if (j - i > 1) {
-        int s = i;
-        while (s < j && (hashes[p][s] >> 40) < n) ++s;
+      int sz = hashes[p].size();
+      for (int i = 0, j = 0; i < sz; i = j) {
+        int s = 0;
+        for (j = i + 1; j < sz && (hashes[p][j]&mask) == (hashes[p][i]&mask); ++j);
+        if (j - i > 1) {
+          int s = i;
+          while (s < j && (hashes[p][s] >> 40) < n) ++s;
 
-        FOR(k1, i, s) FOR(k2, s, j) {
-          matches->push_back({(hashes[p][k1]) >> 40, (hashes[p][k2] >> 40) - n});
+          FOR(k1, i, s) FOR(k2, s, j) {
+            matches->push_back({(hashes[p][k1]) >> 40, (hashes[p][k2] >> 40) - n});
+          }
+        }
+      }
+    }
+    
+
+    if (matches->size() < n + m) {
+      sort(matches->begin(), matches->end());
+    } else {
+      vector<vector<int>> matches_buckets(n);
+      for (auto& p: *matches) matches_buckets[p.first].push_back(p.second);
+      int ptr = 0;
+      REP(i, n) {
+        sort(matches_buckets[i].begin(), matches_buckets[i].end());
+        for (int j: matches_buckets[i]) {
+          (*matches)[ptr++] = {i, j};
         }
       }
     }
   }
 }
 
-
-void calc_matches_buckets(const string& a, const string& b, int k, vector<vector<int>>* matches) {
-  vector<pair<int, int>> matches_pairs;
-  calc_matches(a, b, k, &matches_pairs);
-  for (auto& p: matches_pairs) {
-    matches->at(p.first).push_back(p.second);
-  }
-}
 

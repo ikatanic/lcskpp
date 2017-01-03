@@ -23,8 +23,11 @@ const int inf = 1e9;
 
 // obican dp: O(nmk)
 int lcskpp_dp(const string& a, const string& b, int k) {
+  vector<pair<int, int>> matches_pairs;
+  calc_matches(a, b, k, &matches_pairs);
+  
   vector<vector<int>> matches(a.size());
-  calc_matches_buckets(a, b, k, &matches);
+  for (auto& p: matches_pairs) matches[p.first].push_back(p.second);
   int n = a.size();
   int m = b.size();
 
@@ -54,29 +57,15 @@ int lcskpp_better_hunt(const string& a, const string& b, int k) {
   int m = b.size();
   vector<pair<int, int>> matches;
   calc_matches(a, b, k, &matches);
-
-  if (matches.size() < n+m) {
-    sort(matches.begin(), matches.end());
-  } else {
-    vector<vector<int>> matches_buckets(n);
-    for (auto& p: matches) matches_buckets[p.first].push_back(p.second);
-    int ptr = 0;
-    REP(i, n) {
-      sort(matches_buckets[i].begin(), matches_buckets[i].end());
-      for (int j: matches_buckets[i]) {
-        matches[ptr++] = {i, j};
-      }
-    }
-  }
-  
+    
   int n_matches = matches.size();
   vector<int> MinYPrefix(m + 1, inf);
   MinYPrefix[0] = -inf;
 
   int r = 0;
-
+  
   vector<int> match_dp(matches.size());
-
+  
   int ptr = 0;
   int bs_ptr = 0;
   int cont_ptr = 0;
@@ -141,7 +130,7 @@ int lcskpp_better_hunt2(const string& a, const string& b, int k) {
       }
     }
   }
-  
+
   int n_matches = matches.size();
   vector<int> MinYPrefix(m + 1, inf);
   MinYPrefix[0] = -inf;
@@ -210,79 +199,6 @@ int lcskpp_better_hunt2(const string& a, const string& b, int k) {
       match_dp[ptr] = my_dp;
       
       ptr++;
-    }
-  }
-  
-  return r;
-}
-
-int lcskpp_better_hunt22(const string& a, const string& b, int k) {
-  vector<vector<int>> matches(a.size());
-  calc_matches_buckets(a, b, k, &matches);
-  int n = a.size();
-  //  int m = b.size();
-
-
-  vector<int> MinYPrefix(n + 1, inf);
-  MinYPrefix[0] = -inf;
-
-  int r = 0;
-
-  vector<vector<int>> match_dp(n);
-  REP(i, n) match_dp[i].resize(matches[i].size());
-  
-  REP(i, n) {
-    int cont_ptr = 0;
-    int prev_l = -1;
-    REP(jt, (int)matches[i].size()) {
-      int j = matches[i][jt];
-      int l = match_dp[i][jt];
-
-      // probam popravit trenutni MinYPrefix.
-      // samo ako sam prvi s tim l
-      if (l > prev_l) {
-        prev_l = l;
-        for (int s = 1; s <= k; ++s) {
-          MinYPrefix[l + s] = min(MinYPrefix[l + s], j);
-        }
-      }
-      int my_dp = l+k;
-
-      if (i > 0) {
-        while (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] < j-1) cont_ptr++;
-        if (cont_ptr < (int)matches[i-1].size() && matches[i-1][cont_ptr] == j-1) {
-          int new_dp = match_dp[i-1][cont_ptr] + 1;
-          if (new_dp > my_dp) {
-            my_dp = new_dp;
-            MinYPrefix[new_dp] = min(MinYPrefix[new_dp], j);
-          }
-        }
-      }
-
-      r = max(r, my_dp);
-      match_dp[i][jt] = my_dp;
-    }
-
-    if (i + k < n) {
-      // napravi bs za matcheve iz iteracije i+k
-      int cur_lo = 0;
-      REP(jt, (int)matches[i+k].size()) {
-        int j = matches[i+k][jt]; 
-
-        if (MinYPrefix[cur_lo] < j-k+1) {
-          int lo = cur_lo, hi = r+1;
-          while (lo < hi) {
-            int mid = (lo + hi) / 2;
-            if (MinYPrefix[mid] < j - k + 1)
-              lo = mid + 1;
-            else
-              hi = mid;
-          }
-          cur_lo = lo;
-        }
-
-        match_dp[i+k][jt] = cur_lo-1;
-      }
     }
   }
   
