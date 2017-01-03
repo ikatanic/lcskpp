@@ -312,6 +312,8 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
 void calc_matches_buckets(const string& a, const string& b, int k, vector<vector<int>>* matches) {
   vector<pair<int, int>> matches_pairs;
   calc_matches(a, b, k, &matches_pairs);
-  for (auto& p: matches_pairs) matches->at(p.first).push_back(p.second);
+  for (auto& p: matches_pairs) {
+    matches->at(p.first).push_back(p.second);
+  }
 }
 
