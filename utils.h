@@ -115,15 +115,21 @@ void radix_sort(vector<pair<uint64_t, int>> &v) {
 
 // Assumes v is sorted by _.second and only the
 // first 40 bits of _.first are significant.
-void radix_sort(vector<uint64_t> &v) {
-  const int len = 10;
+void radix_sort(vector<uint64_t> &v, uint64_t maks) {
+  const int len = 9;
   const int sz = 1 << len;
   const int mask = sz - 1;
-  static int pos[sz + 1];
+  static short pos[sz + 1];
 
   vector<uint64_t> w(v.size());
 
-  REP(block, 4) {
+  int BLOCKS = 0;
+  while (maks > 1) {
+    BLOCKS++;
+    maks >>= len;
+  }
+  
+  REP(block, BLOCKS) {
     memset(pos, 0, sizeof pos);
     
     for (auto &x : v)
@@ -267,7 +273,7 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     sigma_to_k *= sigma;
   }
 
-  const int P = 1<<4;
+  const int P = 16;
   vector<uint64_t> hashes[P];
   uint64_t current_hash = 0;
   for (int i = 0; i < n; ++i) {
@@ -282,20 +288,21 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     if (i >= k-1) hashes[current_hash % P].push_back(current_hash / P + ((i + n)*1LL << 40));
   }
 
-  uint64_t mask = (1LL<<40) - 1;
+  uint64_t mask = (1LLU<<40) - 1;
   for (int p = 0; p < P; ++p) {
-    radix_sort(hashes[p]);
+    radix_sort(hashes[p], sigma_to_k / P);
   
     int sz = hashes[p].size();
     for (int i = 0, j = 0; i < sz; i = j) {
+      int s = 0;
       for (j = i + 1; j < sz && (hashes[p][j]&mask) == (hashes[p][i]&mask); ++j);
-      if (j - i <= 1) continue;
+      if (j - i > 1) {
+        int s = i;
+        while (s < j && (hashes[p][s] >> 40) < n) ++s;
 
-      int s = i;
-      while (s < j && (hashes[p][s] >> 40) < n) ++s;
-
-      FOR(k1, i, s) FOR(k2, s, j) {
-        matches->push_back({(hashes[p][k1]) >> 40, (hashes[p][k2] >> 40) - n});
+        FOR(k1, i, s) FOR(k2, s, j) {
+          matches->push_back({(hashes[p][k1]) >> 40, (hashes[p][k2] >> 40) - n});
+        }
       }
     }
   }
