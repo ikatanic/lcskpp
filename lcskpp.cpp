@@ -275,10 +275,10 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
   FenwickMax<pair<int, int> > dp_col_max(n);
   vector<int> dp(matches.size());
   vector<int> recon(matches.size());
-  vector<pair<int, int>> last_dp(n + 2);
 
   int best_idx = 0;
   int lcskpp_length = 0;
+  auto prev = matches.begin();
 
   for (auto event = matches.begin(), bp = matches.begin(); 
        event != matches.end(); ++event) {
@@ -296,9 +296,11 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
     dp[idx] = k;
     recon[idx] = -1;
 
-    if (last_dp[j].second == i) {
-
-      int pidx = last_dp[j].first;
+    auto G = make_pair(event->first-1, event->second-1);
+    while (*prev < G) ++prev;
+    
+    if (*prev == G) {
+      int pidx = prev - matches.begin();
       if (dp[pidx] + 1 > dp[idx]) {
 	dp[idx] = dp[pidx] + 1;
 	recon[idx] = pidx;
@@ -312,8 +314,6 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
 	recon[idx] = prev_dp.second;
       }
     }
-
-    last_dp[j + 1] = {idx, i + 1};
 
     if (dp[idx] > lcskpp_length) {
       lcskpp_length = dp[idx];
