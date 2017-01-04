@@ -24,11 +24,12 @@ typedef function<int (const string&, const string&, int)> solver_t;
 
 map<string, solver_t> solvers = {
   //{"dp", lcskpp_dp},
-    {"better_hunt", lcskpp_better_hunt},
-    {"better_hunt2", lcskpp_better_hunt2},
-    {"better_kuo_cross", lcskpp_better_kuo_cross},
-  {"pavetic", lcskpp_pavetic},
-    {"pavetic_ubrzan", lcskpp_pavetic_ubrzan},
+  //    {"better_hunt", lcskpp_better_hunt},
+  //      {"better_hunt2", lcskpp_better_hunt2},
+    {"better_mix", lcskpp_better_mix},
+      //    {"better_kuo_cross", lcskpp_better_kuo_cross},
+    {"pavetic", lcskpp_pavetic},
+      //      {"pavetic_ubrzan", lcskpp_pavetic_ubrzan},
   // {"pavetic_ubrzan_no_recon", lcskpp_pavetic_ubrzan_no_recon}
 };
 
@@ -39,6 +40,7 @@ map<string, char> codes = {
   {"better_kuo_cross", 'k'},
   {"pavetic", 'p'},
   {"pavetic_ubrzan", 'P'},
+  {"better_mix", 'B'},
   // {"pavetic_ubrzan_no_recon", lcskpp_pavetic_ubrzan_no_recon}
 };
 
