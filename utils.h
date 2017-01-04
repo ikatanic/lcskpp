@@ -335,7 +335,7 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     }
     
 
-    if (matches->size() < (n + m) / 8) {
+    if (matches->size() < (n + m) / 16) {
       sort(matches->begin(), matches->end());
     } else {
       vector<int> pos(n+1, 0);
