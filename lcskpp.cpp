@@ -141,7 +141,7 @@ int lcskpp_better_hunt2(const string& a, const string& b, int k) {
         int j = matches[bs_ptr].second;
 
         if (MinYPrefix[cur_lo] < j-k+1) {
-          int lo = cur_lo, hi = r+1;
+          int lo = cur_lo+1, hi = r+1;
           while (lo < hi) {
             int mid = (lo + hi) / 2;
             if (MinYPrefix[mid] < j - k + 1)
@@ -162,13 +162,10 @@ int lcskpp_better_hunt2(const string& a, const string& b, int k) {
       int j = matches[ptr].second;
       int l = match_dp[ptr];
 
-      // probam popravit trenutni MinYPrefix.
-      if (l > prev_l) {
-        for (int s = 1; s <= k; ++s) {
-          MinYPrefix[l + s] = min(MinYPrefix[l + s], j);
-        }
-        prev_l = l;
+      for (int s = max(prev_l+1, l); s <= l + k; ++s) {
+        MinYPrefix[s] = min(MinYPrefix[s], j);
       }
+      prev_l = l + k;
       
       int my_dp = l+k;
 
@@ -179,6 +176,7 @@ int lcskpp_better_hunt2(const string& a, const string& b, int k) {
           my_dp = new_dp;
           MinYPrefix[new_dp] = min(MinYPrefix[new_dp], j);
         }
+        cont_ptr++;
       }
 
       r = max(r, my_dp);

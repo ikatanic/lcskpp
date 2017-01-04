@@ -24,11 +24,11 @@ typedef function<int (const string&, const string&, int)> solver_t;
 
 map<string, solver_t> solvers = {
   //{"dp", lcskpp_dp},
-  {"better_hunt", lcskpp_better_hunt},
-  {"better_hunt2", lcskpp_better_hunt2},
-  {"better_kuo_cross", lcskpp_better_kuo_cross},
+    {"better_hunt", lcskpp_better_hunt},
+    {"better_hunt2", lcskpp_better_hunt2},
+    {"better_kuo_cross", lcskpp_better_kuo_cross},
   {"pavetic", lcskpp_pavetic},
-  {"pavetic_ubrzan", lcskpp_pavetic_ubrzan},
+    {"pavetic_ubrzan", lcskpp_pavetic_ubrzan},
   // {"pavetic_ubrzan_no_recon", lcskpp_pavetic_ubrzan_no_recon}
 };
 
