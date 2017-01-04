@@ -275,22 +275,10 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
   FenwickMax<pair<int, int> > dp_col_max(n);
   vector<int> dp(matches.size());
   vector<int> recon(matches.size());
-  vector<int> continues(matches.size(), -1);
-
-  if (k > 1) {
-    auto prev = matches.begin();
-    for (auto curr = matches.begin(); 
-         curr != matches.end(); ++curr) {
-      auto G = make_pair(curr->first-1, curr->second-1);
-      while (*prev < G) ++prev;
-      if (*prev == G) {
-	continues[curr-matches.begin()] = prev-matches.begin();
-      }
-    }
-  }
 
   int best_idx = 0;
   int lcskpp_length = 0;
+  auto prev = matches.begin();
 
   for (auto event = matches.begin(), bp = matches.begin(); 
        event != matches.end(); ++event) {
@@ -308,13 +296,17 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
     dp[idx] = k;
     recon[idx] = -1;
 
-    if (continues[idx] != -1) {
-      if (dp[continues[idx]] + 1 > dp[idx]) {
-	dp[idx] = dp[continues[idx]] + 1;
-	recon[idx] = continues[idx];
+    auto G = make_pair(event->first-1, event->second-1);
+    while (*prev < G) ++prev;
+    
+    if (*prev == G) {
+      int pidx = prev - matches.begin();
+      if (dp[pidx] + 1 > dp[idx]) {
+	dp[idx] = dp[pidx] + 1;
+	recon[idx] = pidx;
       }
-    } 
-
+    }
+    
     if (j >= k) {
       pair<int, int> prev_dp = dp_col_max.get(j - k);
       if (prev_dp.first > 0 && dp[idx] < prev_dp.first + k) {
@@ -331,6 +323,7 @@ int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
 
   return lcskpp_length;
 }
+
 
 int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k) {
   vector<pair<int, int>> matches;

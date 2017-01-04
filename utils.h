@@ -334,7 +334,6 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
       for (auto& p: *matches) matches_buckets[p.first].push_back(p.second);
       int ptr = 0;
       REP(i, n) {
-        sort(matches_buckets[i].begin(), matches_buckets[i].end());
         for (int j: matches_buckets[i]) {
           (*matches)[ptr++] = {i, j};
         }
