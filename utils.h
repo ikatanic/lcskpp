@@ -273,7 +273,7 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     sigma_to_k *= sigma;
   }
 
-  if (sigma_to_k <= (1<<14)) {
+  if (sigma_to_k <= (1<<16)) {
     vector<int> last(sigma_to_k, -1);
     vector<int> prev(m);
     uint64_t current_hash = 0;
