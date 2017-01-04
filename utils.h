@@ -273,12 +273,16 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     sigma_to_k *= sigma;
   }
 
-  if (sigma_to_k <= (1<<12)) {
-    vector<vector<int>> hashes(sigma_to_k);
+  if (sigma_to_k <= (1<<14)) {
+    vector<int> last(sigma_to_k, -1);
+    vector<int> prev(m);
     uint64_t current_hash = 0;
     for (int i = 0; i < m; ++i) {
       current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) % sigma_to_k;
-      if (i >= k-1) hashes[current_hash].push_back(i);
+      if (i >= k-1) {
+        prev[i] = last[current_hash];
+        last[current_hash] = i;
+      }
     }
 
 
@@ -286,10 +290,12 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     for (int i = 0; i < n; ++i) {
       current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
       if (i >= k-1) {
-        for (int j : hashes[current_hash]) {
+        int sz = matches->size();
+        for (int j = last[current_hash]; j != -1; j = prev[j]) {
           matches->push_back({i, j});
         }
-      }
+        reverse(matches->begin() + sz, matches->end());
+       }
     }
   } else {
     const int P = 16;
@@ -327,20 +333,15 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
     }
     
 
-    if (matches->size() < n + m) {
+    if (matches->size() < (n + m) / 8) {
       sort(matches->begin(), matches->end());
     } else {
-      vector<vector<int>> matches_buckets(n);
-      for (auto& p: *matches) matches_buckets[p.first].push_back(p.second);
-      int ptr = 0;
-      REP(i, n) {
-        sort(matches_buckets[i].begin(), matches_buckets[i].end());
-        for (int j: matches_buckets[i]) {
-          (*matches)[ptr++] = {i, j};
-        }
-      }
+      vector<int> pos(n+1, 0);
+      vector<pair<int, int>> tmp(matches->size());
+      for (auto& p: *matches) pos[p.first + 1]++;
+      REP(i, n) pos[i+1] += pos[i];
+      for (auto& p: *matches) tmp[ pos[p.first]++ ] = p;
+      matches->swap(tmp);
     }
   }
 }
-
-
