@@ -300,6 +300,8 @@ void calc_matches(const string& a, const string& b, int k, vector<pair<int, int>
   } else {
     const int P = 16;
     vector<uint64_t> hashes[P];
+    REP(i, P) hashes[i].reserve((n + m) / P);
+    
     uint64_t current_hash = 0;
     for (int i = 0; i < n; ++i) {
       current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) % sigma_to_k;
