@@ -20,7 +20,29 @@ using namespace std;
 const int N = 10000;
 const int S = 4;
 
-typedef function<int (const string&, const string&, int)> solver_t;
+typedef function<int (const string&, const string&, int, vector<pair<int, int>>*)> solver_t;
+
+bool indicator(double p) {
+  int r = rand() % 2;
+  if (p >= 0.5)
+    return r ? indicator(2 * p - 1) : true;
+  else
+    return r ? false : indicator(2 * p);
+}
+
+string gen_random_string(int n, int sigma) {
+  string ret;
+  REP(i, n) ret.push_back((rand() % sigma) + 'A');
+  return ret;
+}
+
+string gen_with_similarity(const string &base, int sigma, double p) {
+  string ret = base;
+  REP(i, (int)ret.size())
+    if (!indicator(p))
+      ret[i] = (rand() % sigma) + 'A';
+  return ret;
+}
 
 map<string, solver_t> solvers = {
   //  {"dp", lcskpp_dp},
@@ -38,19 +60,22 @@ map<string, char> codes = {
 pair<string, double> run(int k, double p) {
   const int IT = 5;
   
-  srand(p * 1000000 + k); 
+  srand(p * 100000000 + k); 
   
   string A = gen_random_string(N, S);
   string B = gen_with_similarity(A, S, p);
 
-  int lcskpp_len = lcskpp_pavetic(A, B, k);
+  vector<pair<int, int>> rr;
+  int lcskpp_len = lcskpp_pavetic(A, B, k, &rr);
 
   map<string, double> times;
   
   for (auto& solver : solvers) {
     REP(it, IT) {
       double t = -clock();
-      int solver_lcskpp_len = solver.second(A, B, k);
+      vector<pair<int, int>> recon;
+
+      int solver_lcskpp_len = solver.second(A, B, k, &recon);
       t += clock();
       times[solver.first] += t / IT;
 
