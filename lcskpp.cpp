@@ -52,143 +52,6 @@ int lcskpp_dp(const string& a, const string& b, int k) {
 }
 
 
-int lcskpp_better_hunt(const string& a, const string& b, int k) {
-  int n = a.size();
-  int m = b.size();
-  vector<pair<int, int>> matches;
-  calc_matches(a, b, k, &matches);
-    
-  int n_matches = matches.size();
-  vector<int> MinYPrefix(m + 1, inf);
-  MinYPrefix[0] = -inf;
-
-  int r = 0;
-  
-  vector<int> match_dp(matches.size());
-  
-  int ptr = 0;
-  int bs_ptr = 0;
-  int cont_ptr = 0;
-  while (ptr < n_matches) {
-    int i = matches[ptr].first;
-    int i_ptr = ptr;
-    
-    while (cont_ptr < i_ptr && matches[cont_ptr].first < i-1) cont_ptr++;
-
-    while (bs_ptr < n_matches && matches[bs_ptr].first < i+k) {
-      int j = matches[bs_ptr].second;
-      int lo = lower_bound(MinYPrefix.begin(), MinYPrefix.begin() + r + 2, j-k+1) - MinYPrefix.begin();
-      match_dp[bs_ptr] = lo-1;
-      bs_ptr++;
-    }
-
-    while (ptr < n_matches && matches[ptr].first == i) {
-      int j = matches[ptr].second;
-      int l = match_dp[ptr];
-
-      // probam popravit trenutni MinYPrefix.
-      for (int s = 1; s <= k; ++s) {
-        MinYPrefix[l + s] = min(MinYPrefix[l + s], j);
-      }
-      int my_dp = l+k;
-
-      while (cont_ptr < i_ptr && matches[cont_ptr].second < j-1) cont_ptr++;
-      if (cont_ptr < i_ptr && matches[cont_ptr].second == j-1) {
-        int new_dp = match_dp[cont_ptr] + 1;
-        if (new_dp > my_dp) {
-          my_dp = new_dp;
-          MinYPrefix[new_dp] = min(MinYPrefix[new_dp], j);
-        }
-      }
-
-      r = max(r, my_dp);
-      match_dp[ptr] = my_dp;
-      
-      ptr++;
-    }
-  }
-  
-  return r;
-}
-
-int lcskpp_better_hunt2(const string& a, const string& b, int k) {
-  int n = a.size();
-  int m = b.size();
-  vector<pair<int, int>> matches;
-  calc_matches(a, b, k, &matches);
-
-  int n_matches = matches.size();
-  vector<int> MinYPrefix(m + 1, inf);
-  MinYPrefix[0] = -inf;
-
-  int r = 0;
-
-  vector<int> match_dp(matches.size());
-
-  int ptr = 0;
-  int bs_ptr = 0;
-  int cont_ptr = 0;
-  while (ptr < n_matches) {
-    int i = matches[ptr].first;
-    int i_ptr = ptr;
-    
-    while (cont_ptr < i_ptr && matches[cont_ptr].first < i-1) cont_ptr++;
-
-    while (bs_ptr < n_matches && matches[bs_ptr].first < i+k) {
-      int cur_lo = 0;
-      int row = matches[bs_ptr].first;
-      while (bs_ptr < n_matches && matches[bs_ptr].first == row) {
-        int j = matches[bs_ptr].second;
-
-        if (MinYPrefix[cur_lo] < j-k+1) {
-          int lo = cur_lo+1, hi = r+1;
-          while (lo < hi) {
-            int mid = (lo + hi) / 2;
-            if (MinYPrefix[mid] < j - k + 1)
-              lo = mid + 1;
-            else
-              hi = mid;
-          }
-          cur_lo = lo;
-        }
-
-        match_dp[bs_ptr] = cur_lo-1;
-        bs_ptr++;
-      }
-    }
-
-    int prev_l = -1;
-    while (ptr < n_matches && matches[ptr].first == i) {
-      int j = matches[ptr].second;
-      int l = match_dp[ptr];
-
-      for (int s = max(prev_l+1, l); s <= l + k; ++s) {
-        MinYPrefix[s] = min(MinYPrefix[s], j);
-      }
-      prev_l = l + k;
-      
-      int my_dp = l+k;
-
-      while (cont_ptr < i_ptr && matches[cont_ptr].second < j-1) cont_ptr++;
-      if (cont_ptr < i_ptr && matches[cont_ptr].second == j-1) {
-        int new_dp = match_dp[cont_ptr] + 1;
-        if (new_dp > my_dp) {
-          my_dp = new_dp;
-          MinYPrefix[new_dp] = min(MinYPrefix[new_dp], j);
-        }
-        cont_ptr++;
-      }
-
-      r = max(r, my_dp);
-      match_dp[ptr] = my_dp;
-      
-      ptr++;
-    }
-  }
-  
-  return r;
-}
-
 int lcskpp_better_mix(const string& a, const string& b, int k) {
   int n = a.size();
   int m = b.size();
@@ -200,7 +63,7 @@ int lcskpp_better_mix(const string& a, const string& b, int k) {
   MinYPrefix[0] = -inf;
 
   int r = 0;
-  int log_r = 1;
+  int log_r = 1; // log(r+1) + 1
   
   vector<int> match_dp(matches.size());
 
@@ -219,18 +82,12 @@ int lcskpp_better_mix(const string& a, const string& b, int k) {
     while (bs_ptr < n_matches && matches[bs_ptr].first < i+k) {
       int row = matches[bs_ptr].first;
       
-      bool decision;
-      if (matches_per_row_avg * 3 * log_r < n) {
-        int row_ptr = bs_ptr;
-        while (row_ptr < n_matches && matches[row_ptr].first == row) row_ptr++;
-        decision = (row_ptr - bs_ptr) * log_r * 5 < r;
-      } else {
-        decision = false;
-      }
+      int row_ptr = bs_ptr;
+      while (row_ptr < n_matches && matches[row_ptr].first == row) row_ptr++;
       
-      if (decision) {
+      if ((row_ptr - bs_ptr) * log_r * 5 < r) {
         int cur_lo = 0;
-        while (bs_ptr < n_matches && matches[bs_ptr].first == row) {
+        while (bs_ptr < row_ptr) {
           int j = matches[bs_ptr].second;
 
           if (MinYPrefix[cur_lo] < j-k+1) {
@@ -249,7 +106,7 @@ int lcskpp_better_mix(const string& a, const string& b, int k) {
         }
       } else {
         int lo = 0;
-        while (bs_ptr < n_matches && matches[bs_ptr].first == row) {
+        while (bs_ptr < row_ptr) {
           int j = matches[bs_ptr].second;
           while (MinYPrefix[lo] < j-k+1) lo++;
           match_dp[bs_ptr++] = lo-1;
@@ -279,13 +136,13 @@ int lcskpp_better_mix(const string& a, const string& b, int k) {
         }
       }
 
-      r = max(r, my_dp);
-      match_dp[ptr] = my_dp;
-      
-      ptr++;
-    }
+      if (my_dp > r) {
+        r = my_dp;
+        while ((1<<log_r) < r+1) log_r++;
+      }        
 
-    while ((1<<log_r) < r+1) log_r++;
+      match_dp[ptr++] = my_dp;
+    }
   }
   
   return r;
@@ -360,130 +217,4 @@ int lcskpp_pavetic(const string& A, const string& B, int k) {
   Pavetic::lcskpp(A, B, k, &ret, NULL);
   return ret;
 }
-
-
-int lcskpp_pavetic_ubrzan(const string& A, const string& B, int k) {
-  vector<pair<int, int>> matches;
-  calc_matches(A, B, k, &matches);
-
-  int n = 0;
-  for (auto& p: matches) {
-    n = max(n, max(p.first, p.second));
-  }
-  
-  // Indexed by column, first:dp value, second:index in matches.
-  FenwickMax<pair<int, int> > dp_col_max(n);
-  vector<int> dp(matches.size());
-  vector<int> recon(matches.size());
-
-  int best_idx = 0;
-  int lcskpp_length = 0;
-  auto prev = matches.begin();
-
-  for (auto event = matches.begin(), bp = matches.begin(); 
-       event != matches.end(); ++event) {
-
-    while (bp->first <= event->first - k) {
-      int idx = bp - matches.begin(), j = bp->second;
-      dp_col_max.update(j, make_pair(dp[idx], idx));
-      ++bp;
-    }
-
-    int i = event->first;
-    int j = event->second;
-    int idx = event - matches.begin();
-
-    dp[idx] = k;
-    recon[idx] = -1;
-
-    auto G = make_pair(event->first-1, event->second-1);
-    while (*prev < G) ++prev;
-    
-    if (*prev == G) {
-      int pidx = prev - matches.begin();
-      if (dp[pidx] + 1 > dp[idx]) {
-	dp[idx] = dp[pidx] + 1;
-	recon[idx] = pidx;
-      }
-    }
-    
-    if (j >= k) {
-      pair<int, int> prev_dp = dp_col_max.get(j - k);
-      if (prev_dp.first > 0 && dp[idx] < prev_dp.first + k) {
-	dp[idx] = prev_dp.first + k;
-	recon[idx] = prev_dp.second;
-      }
-    }
-
-    if (dp[idx] > lcskpp_length) {
-      lcskpp_length = dp[idx];
-      best_idx = idx;
-    }
-  }
-
-  return lcskpp_length;
-}
-
-
-int lcskpp_pavetic_ubrzan_no_recon(const string& A, const string& B, int k) {
-  vector<pair<int, int>> matches;
-  calc_matches(A, B, k, &matches);
-  sort(matches.begin(), matches.end());
-  
-  int n = 0;
-  for (auto& p: matches) {
-    n = max(n, max(p.first, p.second));
-  }
-  
-  // Indexed by column, first:dp value, second:index in matches.
-  FenwickMax<int> dp_col_max(n);
-  vector<int> dp(matches.size());
-  vector<int> continues(matches.size(), -1);
-
-  if (k > 1) {
-    auto prev = matches.begin();
-    for (auto curr = matches.begin(); 
-         curr != matches.end(); ++curr) {
-      auto G = make_pair(curr->first-1, curr->second-1);
-      while (*prev < G) ++prev;
-      if (*prev == G) {
-	continues[curr-matches.begin()] = prev-matches.begin();
-      }
-    }
-  }
-
-
-  int lcskpp_length = 0;
-
-  for (auto event = matches.begin(), bp = matches.begin(); 
-       event != matches.end(); ++event) {
-
-    while (bp->first <= event->first - k) {
-      int idx = bp - matches.begin(), j = bp->second;
-      dp_col_max.update(j, dp[idx]);
-      ++bp;
-    }
-
-    int i = event->first;
-    int j = event->second;
-    int idx = event - matches.begin();
-
-    dp[idx] = k;
-
-    if (continues[idx] != -1) 
-      dp[idx] = max(dp[idx], dp[continues[idx]] + 1);
-
-    if (j >= k) {
-      int val = dp_col_max.get(j - k);
-      if (val > 0)
-	dp[idx] = max(dp[idx], val + k);
-    }
-
-    lcskpp_length = max(lcskpp_length, dp[idx]);
-  }
-
-  
-  return lcskpp_length;
-}
-
 
