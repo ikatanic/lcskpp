@@ -14,3 +14,4 @@ TODO:
   - [ ] usporedba s paveticem, memorija/vrijeme, grafovi/tablice
   - [ ] zakljucak
   - [ ] reference
+- [ ] na kraju obrisat ovu listu i napisat nesto smisleno u README

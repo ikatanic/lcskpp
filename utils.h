@@ -133,7 +133,7 @@ void calc_matches(const string& a, const string& b, int k,
   // sigma_to_k is number of possible k length strings
   uint64_t sigma_to_k;
   if (!power_fits_in_63bits(sigma, k, &sigma_to_k)) {
-    fprintf(stderr, "This implementation works only when sigma^k < 2^64.");
+    fprintf(stderr, "This implementation works only when sigma^k < 2^63.");
     return;
   }
   // increase sigma_to_k to the next power of two, for cheaper mod operation

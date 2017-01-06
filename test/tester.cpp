@@ -8,7 +8,8 @@
 #include <queue>
 #include <memory>
 
-#include "lcskpp.cpp"
+#include "../lcskpp.h"
+#include "../../lcskpp_pavetic/lcskpp/lcskpp.h"
 
 #define FOR(i, a, b) for (int i = (a); i < (b); ++i)
 #define REP(i, n) FOR(i, 0, n)
@@ -19,8 +20,6 @@ using namespace std;
 
 const int N = 10000;
 const int S = 4;
-
-typedef function<int (const string&, const string&, int, vector<pair<int, int>>*)> solver_t;
 
 bool indicator(double p) {
   int r = rand() % 2;
@@ -44,61 +43,66 @@ string gen_with_similarity(const string &base, int sigma, double p) {
   return ret;
 }
 
-map<string, solver_t> solvers = {
-  //  {"dp", lcskpp_dp},
-  {"better_mix", lcskpp_better_mix},
-  {"pavetic", lcskpp_pavetic},
-};
+bool check_reconstruction(vector<pair<int, int>>& recon, string& A, string& B, int r) {
+  if (r != (int)recon.size()) return false;
+  for (int i = 0; i < r; ++i) {
+    int x = recon[i].first;
+    int y = recon[i].second;
+    if (x < 0 || x >= (int)A.size()) return false;
+    if (y < 0 || y >= (int)B.size()) return false;
 
-map<string, char> codes = {
-  //  {"dp", 'D'},
-  {"pavetic", 'p'},
-  {"better_mix", 'B'},
-};
+    if (i > 0 && x <= recon[i-1].first) return false;
+    if (i > 0 && y <= recon[i-1].second) return false;
 
+    if (A[x] != B[y]) return false;
+  }
+  return true;
+}
 
-pair<string, double> run(int k, double p) {
-  const int IT = 5;
-  
-  srand(p * 100000000 + k); 
-  
+double run(int k, double p) {
+  const int IT = 10;
+
+  srand(p * 100000000 + k);
+
   string A = gen_random_string(N, S);
   string B = gen_with_similarity(A, S, p);
 
-  vector<pair<int, int>> rr;
-  int lcskpp_len = lcskpp_pavetic(A, B, k, &rr);
 
-  map<string, double> times;
-  
-  for (auto& solver : solvers) {
-    REP(it, IT) {
-      double t = -clock();
-      vector<pair<int, int>> recon;
+  double pavetic_time = 0;
+  double we_time = 0;
 
-      int solver_lcskpp_len = solver.second(A, B, k, &recon);
-      t += clock();
-      times[solver.first] += t / IT;
+  REP(it, IT) {
+    vector<pair<int, int>> pavetic_recon, we_recon;
+    int pavetic_len;
 
-      if (solver_lcskpp_len != lcskpp_len) {
-        puts("BUG");
-        TRACE(A _ B _ k);
-        TRACE(lcskpp_len _ solver.first _ solver_lcskpp_len);
-        exit(0);
-      }
+    pavetic_time = -clock();
+    lcskpp(A, B, k, &pavetic_len, &pavetic_recon);
+    pavetic_time += clock();
+
+    we_time = -clock();
+    int we_len = lcskpp(A, B, k, &we_recon);
+    we_time += clock();
+
+    if (pavetic_len != we_len) {
+      puts("LCSK++ lengths don't match:");
+      TRACE(pavetic_len _ we_len);
+      TRACE(A _ B _ k);
+      exit(0);
+    }
+
+    if (!check_reconstruction(pavetic_recon, A, B, pavetic_len)) {
+      puts("Pavetic reconstruction is wrong.");
+      TRACE(A _ B _ k);
+      exit(0);
+    }
+    if (!check_reconstruction(we_recon, A, B, we_len)) {
+      puts("Our reconstruction is wrong.");
+      TRACE(A _ B _ k);
+      exit(0);
     }
   }
 
-  double best_time = times["pavetic"];
-  string winner = "pavetic";
-
-  for (auto it : times) {
-    if (it.second < best_time) {
-      best_time = it.second;
-      winner = it.first;
-    }
-  }
-
-  return {winner, times["pavetic"] / best_time};
+  return pavetic_time / we_time;
 }
 
 enum { BLACK, RED, GREEN, YELLOW, BLUE };
@@ -125,10 +129,6 @@ int main(int argc, char **argv)
   int p_lo = argc == 5 ? atoi(argv[3]) : 40;
   int p_hi = argc == 5 ? atoi(argv[4]) : 90;
 
-  puts("Znakovi:");
-  for (auto it : codes)
-    printf("%c : %s\n", it.second, it.first.c_str());
-  puts("");
 
   printf("  ");
   for (int p = p_lo; p <= p_hi; p += 10)
@@ -138,11 +138,10 @@ int main(int argc, char **argv)
   FOR(k, k_lo, k_hi + 1) {
     printf("% 3d:   ", k);
     for (int p = p_lo; p <= p_hi; p += 10) {
-      string winner; double factor;
-      tie(winner, factor) = run(k, p / 100.0);
+      double factor = run(k, p / 100.0);
       int color = (factor < 3.0) ? RED : GREEN;
       set_color(color);
-      printf("%c[%.3lf] ", codes[winner], factor);
+      printf("[%.3lf]  ", factor);
       printf("  ");
       clear_color();
     }

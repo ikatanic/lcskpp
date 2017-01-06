@@ -8,43 +8,12 @@
 #include <utility>
 #include <vector>
 #include "utils.h"
-#include "pavetic.h"
 
 using namespace std;
 
-// obican dp: O(nmk)
-int lcskpp_dp(const string& a, const string& b, int k) {
-  vector<pair<int, int>> matches_pairs;
-  calc_matches(a, b, k, &matches_pairs);
 
-  vector<vector<int>> matches(a.size());
-  for (auto& p : matches_pairs) matches[p.first].push_back(p.second);
-  int n = a.size();
-  int m = b.size();
-
-  vector<vector<int>> f(n, vector<int>(m, 0));
-
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < m; ++j) {
-      if (i) f[i][j] = max(f[i-1][j], f[i][j]);
-      if (j) f[i][j] = max(f[i][j-1], f[i][j]);
-
-      int q = 0;
-      while (i-q >= 0 && j-q >= 0 && a[i-q] == b[j-q] && q < 2*k) {
-        q++;
-        if (q >= k) {
-          f[i][j] = max(f[i][j], (i >= q && j >= q ? f[i-q][j-q] : 0) + q);
-        }
-      }
-    }
-  }
-
-  return f[n-1][m-1];
-}
-
-
-int lcskpp_better_mix(const string& a, const string& b, int k,
-  vector<pair<int, int>>* reconstruction) {
+int lcskpp(const string& a, const string& b, int k,
+          vector<pair<int, int>>* reconstruction) {
   int m = b.size();
   vector<pair<int, int>> matches;
   calc_matches(a, b, k, &matches);
@@ -179,11 +148,4 @@ int lcskpp_better_mix(const string& a, const string& b, int k,
   }
 
   return r;
-}
-
-int lcskpp_pavetic(const string& A, const string& B, int k,
-  vector<pair<int, int>>* v) {
-  int ret;
-  Pavetic::lcskpp(A, B, k, &ret, v);
-  return ret;
 }
