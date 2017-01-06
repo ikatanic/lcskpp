@@ -12,8 +12,9 @@
 
 using namespace std;
 
-// Same as following code in Python:
-//   *c = a*b < 2**63
+// If there was no overflow, same as:
+//   c = a*b
+//   return c < 2^63
 bool product_fits_in_63bits(uint64_t a, uint64_t b, uint64_t* c) {
   if (a <= LLONG_MAX / b) {
     *c = a * b;
@@ -23,8 +24,9 @@ bool product_fits_in_63bits(uint64_t a, uint64_t b, uint64_t* c) {
 }
 
 
-// Same as following code in Python:
-//   *c = a**b < 2**63
+// If there was no overflow, same as:
+//   c = a^b
+//   return c < 2^63
 bool power_fits_in_63bits(uint64_t a, uint64_t b, uint64_t* c) {
   *c = 1;
   while (b > 0) {
@@ -40,6 +42,9 @@ uint64_t next_pw2(uint64_t x) {
   return power_2;
 }
 
+int log2(uint64_t x) {
+  return x <= 1 ? 0 : 1 + log2(x / 2);
+}
 
 // Sorts vector of pairs v, by v.first using radix sort.
 // Argument maks should be equal to largest v.first.
@@ -189,33 +194,35 @@ void calc_matches(const string& a, const string& b, int k,
       for (int p = 0; p < P; ++p) {
         hashes[p].reserve((n + m) / P);
       }
+
+      // to use bitwise shifting instead of division/multiplication by sigma_to_k
+      int shift = log2(sigma_to_k);
       
       uint64_t current_hash = 0;
       for (int i = 0; i < n; ++i) {
         current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) & mod_mask;
-        if (i >= k-1) hashes[current_hash % P].push_back(i*sigma_to_k + current_hash/P);
+        if (i >= k-1) hashes[current_hash % P].push_back((i*1LLU << shift) + current_hash/P);
       }
 
       current_hash = 0;
       for (int i = 0; i < m; ++i) {
         current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) & mod_mask;
-        if (i >= k-1) hashes[current_hash % P].push_back((n + i)*sigma_to_k + current_hash/P);
+        if (i >= k-1) hashes[current_hash % P].push_back(((n + i)*1LLU << shift) + current_hash/P);
       }
-
+      
       for (int p = 0; p < P; ++p) {
         radix_sort(hashes[p], sigma_to_k / P);
   
         int sz = hashes[p].size();
         for (int i = 0, j = 0; i < sz; i = j) {
-          int s = 0;
           for (j = i + 1; j < sz && (hashes[p][j] & mod_mask) == (hashes[p][i] & mod_mask); ++j);
           if (j - i > 1) {
             int s = i;
-            while (s < j && (hashes[p][s] / sigma_to_k) < n) ++s;
+            while (s < j && (hashes[p][s] >> shift) < n) ++s;
 
             for (int k1 = i; k1 < s; ++k1) {
               for (int k2 = s; k2 < j; ++k2) {
-                matches->push_back({hashes[p][k1] / sigma_to_k, (hashes[p][k2] / sigma_to_k) - n});
+                matches->push_back({hashes[p][k1] >> shift, (hashes[p][k2] >> shift) - n});
               }
             }
           }
@@ -263,7 +270,9 @@ void calc_matches(const string& a, const string& b, int k,
     }
     
 
-    if (matches->size() < (n + m) / 16) {
+    // Now we have to sort matching pairs. If there is small number of pairs
+    // sort them using std::sort, otherwise use the pigeonhole sort:
+    if (matches->size() * log2(matches->size()) < 3 * n) {
       sort(matches->begin(), matches->end());
     } else {
       vector<int> pos(n+1, 0);
