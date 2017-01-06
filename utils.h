@@ -1,14 +1,13 @@
+// Copyright 2017: I. Katanic, G. Matula
+
 #include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <iostream>
-#include <functional>
-#include <map>
-#include <unordered_map>
-#include <queue>
-#include <memory>
+#include <vector>
+#include <utility>
+#include <string>
 #include <climits>
-
 
 using namespace std;
 
@@ -52,7 +51,7 @@ void radix_sort(vector<pair<uint64_t, int>> &v, uint64_t maks) {
   const int len = 9;
   const int sz = 1 << len;
   const int mask = sz - 1;
-  static short pos[sz + 1];
+  static int pos[sz + 1];
 
   vector<pair<uint64_t, int>> w(v.size());
 
@@ -61,10 +60,10 @@ void radix_sort(vector<pair<uint64_t, int>> &v, uint64_t maks) {
     n_blocks++;
     maks >>= len;
   }
-  
+
   for (int block = 0; block < n_blocks; ++block) {
     memset(pos, 0, sizeof pos);
-    
+
     for (auto &x : v)
       ++pos[((x.first >> (block * len)) & mask) + 1];
 
@@ -79,29 +78,23 @@ void radix_sort(vector<pair<uint64_t, int>> &v, uint64_t maks) {
 }
 
 // Sorts vector of integers using radix sort.
-// Argument maks should be equal to largest integer in the vector.
+// Compares only first log2(maks-1) bits of integers.
 void radix_sort(vector<uint64_t> &v, uint64_t maks) {
-  const int len = 9;
-  const int sz = 1 << len;
-  const int mask = sz - 1;
-  static short pos[sz + 1];
+  const int max_len = 9;
+  static int pos[(1 << max_len) + 1];
 
   vector<uint64_t> w(v.size());
 
-  int n_blocks = 0;
-  while (maks > 1) {
-    n_blocks++;
-    maks /= 2;
-  }
+  int n_bits = log2(maks);
 
   int shift = 0;
-  while (n_blocks > 0) {
-    int len = min(9, n_blocks);
-    int sz = 1<<len;
+  while (n_bits > 0) {
+    int len = min(max_len, n_bits);
+    int sz = 1 << len;
     int mask = sz - 1;
-    
-    memset(pos, 0, sizeof pos);
-    
+
+    memset(pos, 0, sz * sizeof(int));
+
     for (auto &x : v)
       ++pos[((x >> shift) & mask) + 1];
 
@@ -111,8 +104,8 @@ void radix_sort(vector<uint64_t> &v, uint64_t maks) {
     for (auto &x : v)
       w[pos[(x >> shift) & mask]++] = x;
     shift += len;
-    n_blocks -= len;
-    
+    n_bits -= len;
+
     v.swap(w);
   }
 }
@@ -128,13 +121,13 @@ void calc_matches(const string& a, const string& b, int k,
   int n = a.size();
   int m = b.size();
   for (int i = 0; i < n; ++i) {
-    if (map[a[i]] == -1) {
-      map[a[i]] = sigma++;
+    if (map[(uint8_t)a[i]] == -1) {
+      map[(uint8_t)a[i]] = sigma++;
     }
   }
   for (int i = 0; i < m; ++i) {
-    if (map[b[i]] == -1) {
-      map[b[i]] = sigma++;
+    if (map[(uint8_t)b[i]] == -1) {
+      map[(uint8_t)b[i]] = sigma++;
     }
   }
   // sigma_to_k is number of possible k length strings
@@ -147,7 +140,7 @@ void calc_matches(const string& a, const string& b, int k,
   sigma_to_k = next_pw2(sigma_to_k);
   uint64_t mod_mask = sigma_to_k - 1;
 
-  
+
   // Now to find actual pairs, we use perfect hash-table if sigma_to_k is small
   // enough, and otherwise:
   //   a) throw k-length substrings hashes from both string, into 16 buckets,
@@ -155,15 +148,15 @@ void calc_matches(const string& a, const string& b, int k,
   //   b) radix sort each bucket
   //   c) find consecutive hashes of the same value and save pairs of hashes
   //      from different strings.
-  
-  if (sigma_to_k <= (1<<20) && sigma_to_k <= 4*(n + m)) {
+
+  if (sigma_to_k <= (1 << 20) && sigma_to_k <= 4 * (n + m)) {
     // for each value of hash build a linked list containing such substrings
     // from the second string
     vector<int> last(sigma_to_k, -1);
     vector<int> prev(m);
     uint64_t current_hash = 0;
     for (int i = 0; i < m; ++i) {
-      current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) & mod_mask;
+      current_hash = (current_hash * sigma + map[(uint8_t)b[i]]) & mod_mask;
       if (i >= k-1) {
         prev[i] = last[current_hash];
         last[current_hash] = i;
@@ -174,7 +167,7 @@ void calc_matches(const string& a, const string& b, int k,
     // the linked list
     current_hash = 0;
     for (int i = 0; i < n; ++i) {
-      current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) & mod_mask;
+      current_hash = (current_hash * sigma + map[(uint8_t)a[i]]) & mod_mask;
       if (i >= k-1) {
         int sz = matches->size();
         for (int j = last[current_hash]; j != -1; j = prev[j]) {
@@ -189,33 +182,35 @@ void calc_matches(const string& a, const string& b, int k,
 
     uint64_t _tmp;
     if (product_fits_in_63bits(sigma_to_k, n + m, &_tmp)) {
-      const int P = 16;
+      const int P = 16; // number of buckets
       vector<uint64_t> hashes[P];
       for (int p = 0; p < P; ++p) {
         hashes[p].reserve((n + m) / P);
       }
 
-      // to use bitwise shifting instead of division/multiplication by sigma_to_k
+      // we use bitwise shifting instead of div/mul by sigma_to_k
       int shift = log2(sigma_to_k);
-      
+
       uint64_t current_hash = 0;
       for (int i = 0; i < n; ++i) {
-        current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) & mod_mask;
-        if (i >= k-1) hashes[current_hash % P].push_back((i*1LLU << shift) + current_hash/P);
+        current_hash = (current_hash * sigma + map[(uint8_t)a[i]]) & mod_mask;
+        if (i >= k-1) hashes[current_hash%P].push_back((i*1LLU << shift) + current_hash/P);
       }
 
       current_hash = 0;
       for (int i = 0; i < m; ++i) {
-        current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) & mod_mask;
-        if (i >= k-1) hashes[current_hash % P].push_back(((n + i)*1LLU << shift) + current_hash/P);
+        current_hash = (current_hash * sigma + map[(uint8_t)b[i]]) & mod_mask;
+        if (i >= k-1) hashes[current_hash%P].push_back(((n + i)*1LLU << shift) + current_hash/P);
       }
-      
+
       for (int p = 0; p < P; ++p) {
         radix_sort(hashes[p], sigma_to_k / P);
-  
+
         int sz = hashes[p].size();
         for (int i = 0, j = 0; i < sz; i = j) {
-          for (j = i + 1; j < sz && (hashes[p][j] & mod_mask) == (hashes[p][i] & mod_mask); ++j);
+          for (j = i + 1; j < sz &&
+            (hashes[p][j] & mod_mask) == (hashes[p][i] & mod_mask); ++j);
+
           if (j - i > 1) {
             int s = i;
             while (s < j && (hashes[p][s] >> shift) < n) ++s;
@@ -234,27 +229,28 @@ void calc_matches(const string& a, const string& b, int k,
       for (int p = 0; p < P; ++p) {
         hashes[p].reserve((n + m) / P);
       }
-    
+
       uint64_t current_hash = 0;
       for (int i = 0; i < n; ++i) {
-        current_hash = (current_hash * sigma + map[(unsigned char)a[i]]) & mod_mask;
-        if (i >= k-1) hashes[current_hash % P].push_back({current_hash / P, i});
+        current_hash = (current_hash * sigma + map[(uint8_t)a[i]]) & mod_mask;
+        if (i >= k-1) hashes[current_hash%P].push_back({current_hash / P, i});
       }
 
       current_hash = 0;
 
       for (int i = 0; i < m; ++i) {
-        current_hash = (current_hash * sigma + map[(unsigned char)b[i]]) & mod_mask;
-        if (i >= k-1) hashes[current_hash % P].push_back({current_hash / P, (n + i)});
+        current_hash = (current_hash * sigma + map[(uint8_t)b[i]]) & mod_mask;
+        if (i >= k-1) hashes[current_hash%P].push_back({current_hash / P, (n + i)});
       }
 
       for (int p = 0; p < P; ++p) {
         radix_sort(hashes[p], sigma_to_k / P);
-  
+
         int sz = hashes[p].size();
         for (int i = 0, j = 0; i < sz; i = j) {
           int s = 0;
-          for (j = i + 1; j < sz && hashes[p][j].first == hashes[p][i].first; ++j);
+          for (j = i+1; j < sz && hashes[p][j].first == hashes[p][i].first; ++j);
+
           if (j - i > 1) {
             int s = i;
             while (s < j && hashes[p][s].second < n) ++s;
@@ -268,7 +264,7 @@ void calc_matches(const string& a, const string& b, int k,
         }
       }
     }
-    
+
 
     // Now we have to sort matching pairs. If there is small number of pairs
     // sort them using std::sort, otherwise use the pigeonhole sort:
@@ -277,10 +273,10 @@ void calc_matches(const string& a, const string& b, int k,
     } else {
       vector<int> pos(n+1, 0);
       vector<pair<int, int>> tmp(matches->size());
-      for (auto& p: *matches) pos[p.first + 1]++;
+      for (auto& p : *matches) pos[p.first + 1]++;
       for (int i = 0; i < n; ++i)
         pos[i+1] += pos[i];
-      for (auto& p: *matches) tmp[ pos[p.first]++ ] = p;
+      for (auto& p : *matches) tmp[ pos[p.first]++ ] = p;
       matches->swap(tmp);
     }
   }

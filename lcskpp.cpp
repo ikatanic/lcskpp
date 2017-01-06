@@ -1,28 +1,24 @@
-// lcskpp algoritmi
+// Copyright 2017: I. Katanic, G. Matula
 
 #include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <iostream>
-#include <functional>
-#include <map>
-#include <queue>
+#include <string>
+#include <utility>
+#include <vector>
 #include "utils.h"
 #include "pavetic.h"
 
 using namespace std;
 
-typedef long long llint;
-
-const int inf = 1e9;
-
 // obican dp: O(nmk)
 int lcskpp_dp(const string& a, const string& b, int k) {
   vector<pair<int, int>> matches_pairs;
   calc_matches(a, b, k, &matches_pairs);
-  
+
   vector<vector<int>> matches(a.size());
-  for (auto& p: matches_pairs) matches[p.first].push_back(p.second);
+  for (auto& p : matches_pairs) matches[p.first].push_back(p.second);
   int n = a.size();
   int m = b.size();
 
@@ -42,50 +38,59 @@ int lcskpp_dp(const string& a, const string& b, int k) {
       }
     }
   }
-  
+
   return f[n-1][m-1];
 }
 
 
-int lcskpp_better_mix(const string& a, const string& b, int k, vector<pair<int, int>>* reconstruction) {
+int lcskpp_better_mix(const string& a, const string& b, int k,
+  vector<pair<int, int>>* reconstruction) {
   int m = b.size();
   vector<pair<int, int>> matches;
   calc_matches(a, b, k, &matches);
 
   int n_matches = matches.size();
-  vector<pair<int, int>> MinYPrefix(m + 1, {inf, -1});
-  MinYPrefix[0].first = -inf;
+  vector<pair<int, int>> MinYPrefix(m + 1, {m+1, -1});
+  MinYPrefix[0].first = -1;
 
-  int r = 0;
-  int log_r = 1; // log(r+1) + 1
-  
+  int r = 0;  // current lcsk++ length
+  int log_r = 1;  // log(r+1) + 1
+
   vector<int> match_dp(matches.size());
   vector<int> recon(matches.size());
-  
+
   int ptr = 0;
-  int bs_ptr = 0;
+  int query_ptr = 0;
   int cont_ptr = 0;
   int last_idx = -1;
-  
+
+  // We process matches row by row (ptr).
+  // When at row i, we also handle queries on MinYPrefix for matches
+  // in row i+k-1 (query_ptr).
+  // cont_ptr points to ptr's possible continuation (applicable only to k > 1).
   while (ptr < n_matches) {
-    int i = matches[ptr].first;
-    int i_ptr = ptr;
-    
-    while (k > 1 && cont_ptr < i_ptr && matches[cont_ptr].first < i-1) cont_ptr++;
+    int i = matches[ptr].first;  // current row index
+    int i_row_ptr = ptr;
 
-    while (bs_ptr < n_matches && matches[bs_ptr].first < i+k) {
-      int row = matches[bs_ptr].first;
-      
-      int row_ptr = bs_ptr;
-      while (row_ptr < n_matches && matches[row_ptr].first == row) row_ptr++;
-      
-      if ((row_ptr - bs_ptr) * log_r * 6 < r) {
-        int cur_lo = 0;
-        while (bs_ptr < row_ptr) {
-          int j = matches[bs_ptr].second;
 
-          if (MinYPrefix[cur_lo].first < j-k+1) {
-            int lo = cur_lo+1, hi = r+1;
+    while (query_ptr < n_matches && matches[query_ptr].first < i+k) {
+      int query_row_i = matches[query_ptr].first;
+
+      // count matches in row query_row_i
+      int query_row_end = query_ptr;
+      while (query_row_end < n_matches &&
+             matches[query_row_end].first == query_row_i) query_row_end++;
+      int row_count = query_row_end - query_ptr;
+
+      // decide between binary search for each match (Hunt and Szymanski) and
+      // sweep through MinYPrefix (Kuo and Cross).
+      if (row_count * log_r * 6 < r) {
+        int last_l = 0;
+        while (query_ptr < query_row_end) {
+          int j = matches[query_ptr].second;
+
+          if (MinYPrefix[last_l].first < j-k+1) {
+            int lo = last_l+1, hi = r+1;
             while (lo < hi) {
               int mid = (lo + hi) / 2;
               if (MinYPrefix[mid].first < j - k + 1)
@@ -93,59 +98,62 @@ int lcskpp_better_mix(const string& a, const string& b, int k, vector<pair<int, 
               else
                 hi = mid;
             }
-            cur_lo = lo;
+            last_l = lo;
           }
 
-          recon[bs_ptr] = MinYPrefix[cur_lo-1].second;
-          match_dp[bs_ptr++] = cur_lo-1;
+          recon[query_ptr] = MinYPrefix[last_l-1].second;
+          match_dp[query_ptr++] = last_l-1+k;
         }
       } else {
-        int lo = 0;
-        while (bs_ptr < row_ptr) {
-          int j = matches[bs_ptr].second;
-          while (MinYPrefix[lo].first < j-k+1) lo++;
-          recon[bs_ptr] = MinYPrefix[lo-1].second;
-          match_dp[bs_ptr++] = lo-1;
+        int l = 0;
+        while (query_ptr < query_row_end) {
+          int j = matches[query_ptr].second;
+          while (MinYPrefix[l].first < j-k+1) l++;
+          recon[query_ptr] = MinYPrefix[l-1].second;
+          match_dp[query_ptr++] = l-1+k;
         }
       }
     }
 
+    if (k > 1) {
+      while (cont_ptr < i_row_ptr && matches[cont_ptr].first < i-1) cont_ptr++;
+    }
+
+    // now the main loop through matches in row i, finishing off their
+    // dp calculation and updates to MinYPrefix
     while (ptr < n_matches && matches[ptr].first == i) {
       int j = matches[ptr].second;
-      int l = match_dp[ptr];
+      int& ptr_dp = match_dp[ptr];
 
-      for (int s = l + k; s > l && MinYPrefix[s].first > j; --s) {
+      for (int s = ptr_dp; s > ptr_dp-k && MinYPrefix[s].first > j; --s) {
         MinYPrefix[s] = {j, ptr};
       }
-      
-      int my_dp = l+k;
 
+      // Try continuation
       if (k > 1) {
-        while (cont_ptr < i_ptr && matches[cont_ptr].second < j-1) cont_ptr++;
-        if (cont_ptr < i_ptr && matches[cont_ptr].second == j-1) {
-          int new_dp = match_dp[cont_ptr] + 1;
-          if (new_dp > my_dp) {
-            my_dp = new_dp;
-            recon[ptr] = cont_ptr;
-            MinYPrefix[my_dp] = min(MinYPrefix[my_dp], {j, ptr});
-          }
+        while (cont_ptr < i_row_ptr && matches[cont_ptr].second < j-1)
           cont_ptr++;
-        }
+        if (cont_ptr < i_row_ptr && matches[cont_ptr].second == j-1 &&
+            match_dp[cont_ptr] + 1 > ptr_dp) {
+                ptr_dp = match_dp[cont_ptr] + 1;
+                recon[ptr] = cont_ptr;
+                MinYPrefix[ptr_dp] = min(MinYPrefix[ptr_dp], {j, ptr});
+              }
       }
 
-      if (my_dp > r) {
-        r = my_dp;
+      if (ptr_dp > r) {
+        r = ptr_dp;
         last_idx = ptr;
-        while ((1<<log_r) < r+1) log_r++;
-      }        
+        while ((1 << log_r) < r+1) log_r++;
+      }
 
-      match_dp[ptr++] = my_dp;
+      ptr++;
     }
   }
 
   if (reconstruction) {
     reconstruction->clear();
-    
+
     int i = last_idx;
     while (i != -1) {
       assert(0 <= i && i < matches.size());
@@ -157,8 +165,9 @@ int lcskpp_better_mix(const string& a, const string& b, int k, vector<pair<int, 
         reconstruction->push_back({matches[i].first, matches[i].second});
       } else {
         // non-overlapping match
-        assert(recon[i] == -1 || (matches[recon[i]].first + k <= matches[i].first &&
-                                  matches[recon[i]].second + k <= matches[i].second));
+        assert(recon[i] == -1 ||
+          (matches[recon[i]].first + k <= matches[i].first &&
+           matches[recon[i]].second + k <= matches[i].second));
         for (int j = 0; j < k; ++j) {
           reconstruction->push_back({matches[i].first-j, matches[i].second-j});
         }
@@ -168,13 +177,13 @@ int lcskpp_better_mix(const string& a, const string& b, int k, vector<pair<int, 
     }
     reverse(reconstruction->begin(), reconstruction->end());
   }
-  
+
   return r;
 }
 
-int lcskpp_pavetic(const string& A, const string& B, int k, vector<pair<int, int>>* v) {
+int lcskpp_pavetic(const string& A, const string& B, int k,
+  vector<pair<int, int>>* v) {
   int ret;
   Pavetic::lcskpp(A, B, k, &ret, v);
   return ret;
 }
-
