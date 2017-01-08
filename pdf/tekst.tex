@@ -1,4 +1,4 @@
-% Created 2017-01-08 Sun 17:12
+% Created 2017-01-08 Sun 20:10
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -65,12 +65,13 @@ $LCS_{3++}(a,b) = 6$, podstring je "ABBDCD" (\{boldano na primjeru\}).
 \label{sec-2-1}
 Originalni LCS$_{\text{k++}}$ algoritam [Pavetić, Žužić, Šikić], kao i neki
 drugi LCS algoritmi, kao početni korak traže sve parove indeksa $(i,
-  j)$ na kojima se ulazni par stringova ($a$, $b$) "poklapa". U
+   j)$ na kojima se ulazni par stringova ($a$, $b$) "poklapa". U
 kontekstu običnog LCS-a, radi se o točkama za koje $a[i] = b[j]$.  U
-kontekstu LCS$_{\text{k}}$, ili LCS$_{\text{k++}}$ promatramo točke za koje $a[i..i+k-1]
-  = b[j..j+k-1]$, odnosno za koje su podstringovi duljine $k$ koji
-počinju na pripadajućim pozicijama jednaki. U nastavku ćemo se
-fokusirati na ovu drugu definiciju, te ćemo parove koji je
+kontekstu LCS$_{\text{k}}$, ili LCS$_{\text{k++}}$ promatramo točke za koje
+$a[i..i+k-1] = b[j..j+k-1]$, odnosno za koje su podstringovi
+duljine $k$ koji počinju na pripadajućim pozicijama jednaki. LCS$_{\text{k}}$
+i LCS$_{\text{k++}}$ se naravno svode na LCS u slučaju $k = 1$. U nastavku
+ćemo se fokusirati na ovu drugu definiciju, te ćemo parove koji je
 zadovoljavaju zvati jednostavno \emph{točkama}, a njihove elemente
 \emph{koordinatama}.
 
@@ -101,8 +102,90 @@ Nakon sortiranja algoritam je sličan prethodnom, niz (u ovom slučaju
 podstringova, a ne sufiksa), dijeli se na segmente prema jednakosti,
 te se iz odgovarajućih parova unutar segmenta generiraju točke.
 
+\{primjer sortiranja, sortirati parove (substring, string, indeks)\}
+
 Valja napomenuti da u slučaju malog broja točaka ovaj dio algoritma
 vremenski potpuno dominira nad ostatkom, te je dobar dio napora uložen
 kako bi se toliko ubrzao (više o samom ubrzanju u kasnijem poglavlju).
+
+\subsection{traženje LCSk++ iz točaka}
+\label{sec-2-2}
+Preostaje iz već poznatih točaka pronaći sam LCS$_{\text{k++}}$. Ako s $P$
+označimo skup točaka konstruiran u prethodnom koraku, rekurzivna
+relacija dinamičkog programiranja na tako prorijeđenoj matrici ima
+sljedeći oblik:
+
+   \{dp relacija za sparse\}
+   \{
+   za (i, j) iz P:
+     dp(i, j) = max \{
+(1)     k + max$_{\text{i' <= i - k, j' <= j - k}}$\{dp(i', j')\},
+(2)     1 + dp(i-1, j-1) ako (i-1, j-1) $\in$ P
+     \}
+   \}
+
+Ako imamo niz $V$ točaka koji sadrži točke iz $P$ sortirane po prvoj,
+pa po drugoj koordinati, lako je za svaku točku (i, j) pronaći indeks
+točke (i-1, j-1), u slučaju da je prisutna u nizu. To možemo napraviti
+u amortizirano linearnom vremenu jednim prolaskom kroz niz $V$, i time
+je dio (2) riješen. U [Pavetić] isto je izvedeno binarnim pretraživanjem,
+što je neznatno sporije.
+
+Dio (2) je nešto složeniji. U [Pavetić] koristi se prolaz po retcima
+pa po stupcima (u smislu koordinata točaka), pri čemu se održava
+struktura podataka (Fenwickovo stablo) koja omogućuje računanje gornjeg
+maksimuma u logaritamskoj složenosti. 
+
+Naš pristup vođen je idejom algoritma za LCS iz [Hunt], koju je uz neke
+manje trivijalne opservacije moguće prilagoditi za LCS$_{\text{k++}}$. Za početak
+ćemo objasniti ideju za LCS, vidjeti trivijalno proširenje na LCS$_{\text{k}}$, te
+zatim proširenje na LCS$_{\text{k++}}$.
+
+\subsubsection{Hunt}
+\label{sec-2-2-1}
+U [Hunt] se također radi prolaz po retcima pa po stupcima.  Glavna
+ideja iz [Hunt] je (po opisu iz [Survey]) održavati niz
+$MinYPos[l]$, koji uz pretpostavku da smo trenutno u retku $i$
+označava minimalni $j$ takav da je $LCS(a[1..i], b[1..j]) =
+    l$. Primijetimo da je $MinYPos$ nužno rastući niz.
+
+Pretpostavimo da smo obradili točke $(i', j')$ s $i' < i$, te sada
+promatramo točke $(i, j)$, za neki fiksni $i$. Pretpostavimo da
+$MinYPos[l] < j$.  Tada postoji LCS duljine $l$ koji završava točkom
+$(i', j')$ gdje $i' < i$ i $j' < j$. Taj je LCS moguće proširiti točkom
+$(i, j)$, pa znamo da nakon obrade trenutnog retka mora vrijediti
+$MinYPos[l+1] <= j$.  
+
+Vidimo da je dovoljno pronaći $l$ takav da $MinYPos[l] < j <
+    MinYPos[l+1]$ (ako postoji), što možemo napraviti binarnim
+pretraživanjem, te postaviti $MinYPos[l+1]$ na $j$ (jer niz duljine
+$l$ koji završava na $MinYPos[l]$ proširujemo u niz duljine $l+1$
+koji završava na $j$).
+
+Ovdje treba napomenuti da je redoslijed obilaska točaka za fiksni $i$
+bitan. Točke treba obići padajuće po stupcima, kako bi se promjene
+niza $MinYPos$ dogodile efektivno paralelno. U protivnom se može
+dogoditi da izgradimo ilegalan LCS koji sadrži točke u istom
+retku.
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{modifikacije hunta i kuo-crossa za lcsk++}
+\label{sec-2-3}
+
+\section{mjerenja, rezultati}
+\label{sec-3}
+
+\section{zaključak}
+\label{sec-4}
 % Emacs 24.5.1 (Org mode 8.2.10)
 \end{document}
