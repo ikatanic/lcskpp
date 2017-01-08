@@ -1,0 +1,92 @@
+% Created 2017-01-08 Sun 17:02
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fixltx2e}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{marvosym}
+\usepackage{wasysym}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\tolerance=1000
+\author{gustav}
+\date{\today}
+\title{tekst}
+\hypersetup{
+  pdfkeywords={},
+  pdfsubject={},
+  pdfcreator={Emacs 24.5.1 (Org mode 8.2.10)}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{opis, primjer}
+\label{sec-1}
+Mjere udaljenosti stringova od velike su važnosti u bioinformatici.
+Najpoznatiji primjeri uključuju, Levenshteinovu (odnosno edit)
+udaljenost i LCS (longest common subsequence), odnosno najdulji
+zajednički podniz.
+
+Obje udaljenosti za dva stringa $a$ i $b$ u općenitom se slučaju
+računaju dinamičkim programiranjem u složenosti $O(|a||b|)$, što ih,
+usprkos sofisticiranim optimizacijama kako memorije, tako i vremena
+izvođenja, nepraktičnim za velike primjere.
+
+Zbog toga su razvijene modifikacije problema koje daju rjeđe matrice
+dinamičkog programiranja i time omogućuju implementaciju koja je 
+dovoljno efikasna na primjerima iz stvarnoga svijeta.
+
+Primjer takve modifikacije je LCS$_{\text{k}}$ [Benson], koja zahtijeva da
+se zajednički podniz sastoji od ne-preklapajućih podstringova
+zadane duljine $k$. Jasno je da povećanjem $k$ dobivamo manji
+broj parova jednakih podstringova dvaju stringova. S druge strane
+za prevelik $k$ udaljenost je nula i mjera postaje beskorisna.
+
+Mjera kojom smo se bavili u okviru ovog projekta je LCS$_{\text{k++}}$ [Pavetić,
+Žužić, Šikić], koja relaksira uvjet LCS$_{\text{k}}$ tako što dozvoljava
+preklapanja. Drugim riječima, u LCS$_{\text{k++}}$ razmatraju se zajednički
+podnizovi sastavljeni od podstringova duljine \textbf{barem} $k$.
+
+Uzmimo za primjer stringove $a$ = "ABBABDCDAD" i $b$ = "BCBABBDCDBAD".
+$LCS_{2++}(a,b) = 8$, podstring je "ABBDCDAD" (\{boldano na primjeru\}).
+$LCS_{3++}(a,b) = 6$, podstring je "ABBDCD" (\{boldano na primjeru\}).
+
+\section{opis algoritma, primjer}
+\label{sec-2}
+Originalni LCS$_{\text{k++}}$ algoritam [Pavetić, Žužić, Šikić], kao i neki
+drugi LCS algoritmi, kao početni korak traže sve parove indeksa $(i,
+  j)$ na kojima se ulazni par stringova ($a$, $b$) "poklapa". U
+kontekstu običnog LCS-a, radi se o točkama za koje $a[i] = b[j]$.  U
+kontekstu LCS$_{\text{k}}$, ili LCS$_{\text{k++}}$ promatramo točke za koje $a[i..i+k-1]
+  = b[j..j+k-1]$, odnosno za koje su podstringovi duljine $k$ koji
+počinju na pripadajućim pozicijama jednaki. U nastavku ćemo se
+fokusirati na ovu drugu definiciju, te ćemo parove koji je
+zadovoljavaju zvati jednostavno \emph{točkama}, a njihove elemente
+\emph{koordinatama}.
+
+Općenito rješenje ovog koraka moguće je napraviti u složenosti
+$O(|a| + |b| + |r|)$ gdje je |r| ukupan broj točaka [poljski rad].
+Ideja je konstruirati sufiksno polje nad stringom $a#b$, te ga
+podijeliti na segmente s $LCP >= k$. Unutar takvog segmenta svaki
+par sufiksa gdje jedan dolazi iz $a$, a jedan iz $b$, definira jednu
+točku. Uz odgovarajuća preslagivanja sufiksa unutar segmenata moguće
+je točke generirati u redoslijedu rastuće prve, pa druge koordinate.
+
+Ovaj pristup, iako teoretski zadovoljavajuć (složenost je
+optimalna), u praksi se ne ponaša toliko dobro. Slijedeći [Pavetić,
+Žužić, Šikić], fokusirali smo se na manje vrijednosti $k$, za koje
+je moguće napraviti savršeno sažimanje (\emph{perfect hashing}) u
+64-bitne riječi. Tako primjerice za $k$ do $20$ i abecedu do $4$
+elementa, podstring od $k$ znakova možemo zapisati u $40$ bitova.
+Sortiranje niza cijelih brojeva moguće je izvesti puno efikasnije
+od najbržih algoritama za sortiranje sufiksa. 
+% Emacs 24.5.1 (Org mode 8.2.10)
+\end{document}
