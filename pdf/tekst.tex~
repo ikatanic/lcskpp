@@ -1,4 +1,4 @@
-% Created 2017-01-08 Sun 20:09
+% Created 2017-01-09 Mon 00:33
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -125,11 +125,12 @@ sljedeći oblik:
    \}
 
 Ako imamo niz $V$ točaka koji sadrži točke iz $P$ sortirane po prvoj,
-pa po drugoj koordinati, lako je za svaku točku (i, j) pronaći indeks
-točke (i-1, j-1), u slučaju da je prisutna u nizu. To možemo napraviti
+pa po drugoj koordinati, lako je za svaku točku $(i, j)$ pronaći indeks
+točke $(i-1, j-1)$, u slučaju da je prisutna u nizu. To možemo napraviti
 u amortizirano linearnom vremenu jednim prolaskom kroz niz $V$, i time
 je dio (2) riješen. U [Pavetić] isto je izvedeno binarnim pretraživanjem,
-što je neznatno sporije.
+što je neznatno sporije. Ako točke $(i, j)$ i $(i-1, j-1)$ postoje,
+kažemo da je druga \emph{nastavak} prve.
 
 Dio (2) je nešto složeniji. U [Pavetić] koristi se prolaz po retcima
 pa po stupcima (u smislu koordinata točaka), pri čemu se održava
@@ -138,16 +139,15 @@ maksimuma u logaritamskoj složenosti.
 
 Naš pristup vođen je idejom algoritma za LCS iz [Hunt], koju je uz neke
 manje trivijalne opservacije moguće prilagoditi za LCS$_{\text{k++}}$. Za početak
-ćemo objasniti ideju za LCS, vidjeti trivijalno proširenje na LCS$_{\text{k}}$, te
-zatim proširenje na LCS$_{\text{k++}}$.
+ćemo objasniti ideju za LCS, a onda i proširenje na LCS$_{\text{k++}}$.
 
 \subsubsection{Hunt}
 \label{sec-2-2-1}
 U [Hunt] se također radi prolaz po retcima pa po stupcima.  Glavna
 ideja iz [Hunt] je (po opisu iz [Survey]) održavati niz
-MinYPos[l], koji uz pretpostavku da smo trenutno u retku $i$
+$MinYPos[l]$, koji uz pretpostavku da smo trenutno u retku $i$
 označava minimalni $j$ takav da je $LCS(a[1..i], b[1..j]) =
-    l$. Primijetimo da je MinYPos nužno rastući niz.
+    l$. Primijetimo da je $MinYPos$ nužno rastući niz.
 
 Pretpostavimo da smo obradili točke $(i', j')$ s $i' < i$, te sada
 promatramo točke $(i, j)$, za neki fiksni $i$. Pretpostavimo da
@@ -156,18 +156,90 @@ $(i', j')$ gdje $i' < i$ i $j' < j$. Taj je LCS moguće proširiti točkom
 $(i, j)$, pa znamo da nakon obrade trenutnog retka mora vrijediti
 $MinYPos[l+1] <= j$.  
 
-Vidimo da je dovoljno pronaći $l$ takav da $MinYPos[l] < j <
-    MinYPos[l+1]$ (ako postoji), što možemo napraviti binarnim
-pretraživanjem, te postaviti $MinYPos[l+1]$ na $j$ (jer niz duljine
-$l$ koji završava na $MinYPos[l]$ proširujemo u niz duljine $l+1$
-koji završava na $j$).
+Vidimo da je dovoljno pronaći $l$ takav da $MinYPos[l] < j <=
+    MinYPos[l+1]$, što možemo napraviti binarnim pretraživanjem, te
+postaviti $MinYPos[l+1]$ na $j$ (jer niz duljine $l$ koji završava
+na $MinYPos[l]$ proširujemo u niz duljine $l+1$ koji završava na
+$j$).
 
 Ovdje treba napomenuti da je redoslijed obilaska točaka za fiksni $i$
 bitan. Točke treba obići padajuće po stupcima, kako bi se promjene
-niza MinYPos dogodile efektivno paralelno. U protivnom se može
+niza $MinYPos$ dogodile efektivno paralelno. U protivnom se može
 dogoditi da izgradimo ilegalan LCS koji sadrži točke u istom
 retku.
 
+\subsubsection{Kuo \& Cross}
+\label{sec-2-2-2}
+Algoritam iz [Hunt] pojednostavljen je u [Kuo] tako da se umijesto
+binarnog pretraživanja radi amortizirano linearan prolaz po trenutnom
+retku i nizu $MinYPrefix$. Dakle dok prolazimo kroz točke u trenutng 
+retka, ujedno održavamo odgovarajući indeks $l$ u $MinYPrefix$, koji
+za trenutnu točku (i, j) povećavamo dok $MinYPrefix[l] < j$. 
+Na prvi pogled to pogoršava složenost algoritma. Taj instinkt je
+točan u općenitom slučaju, no svejedno analizirajmo detaljnije
+složenosti tih dvaju pristupa.
+
+Recimo da u trenutnom retku $i$ imamo $t$ točaka. Huntov algoritam
+primijenjen na jednom retku ima složenost $O(t \log r)$, gdje je
+$r$ najdulji LCS koji smo do sad pronašli. S druge strane algoritam
+Kuoov algoritam ima složenost $O(t + r)$. Dakle jasno je da je za
+veći $r$ bolji Huntov algoritam, a za manji Kuoov.
+
+\subsubsection{Proširenje na LCS$_{\text{k++}}$}
+\label{sec-2-2-3}
+Prvo ćemo malo modificirati značenje niza $MinYPrefix$.
+Za algoritam koji slijedi $MinYPrefix[l]$ označava najmanji $j$
+takav da $LCS_{k++}(a[1..i+k-1], b[1..j+k-1]) >= l$. Razlika je
+u tome što smo znak jednakosti zamijenili u znak nejednakosti
+(promijenili smo i intervale da uzmemo u obzir duljinu $k$). 
+Ta promjena je ključna za očuvanje važnog svojstva $MinYPrefix$:
+niz mora biti ne-padajući kako bismo ga mogli binarno pretraživati.
+
+Kako bismo se uvjerili u nužnost uvjeta, zamislimo instancu u kojoj
+nema nastavaka (dakle ako postoji točka $(i, j)$, tada ne postoji
+$(i-1, j-1)$). U tom slučaju $MinYPrefix[l]$ može biti veći od
+nule samo za $l$ djeljiv s $k$. Za $k > 1$ takav niz će rijetko
+biti ne-padajuć.
+
+Tijekom obrade točaka iz retka $i$, potreban nam je $MinYPrefix$ u
+stanju u kojem je bio nakon obrade retka $i-k$, pa zasad
+jednostavno pretpostavimo da nam je dostupan. Označimo ga s
+$MinYPrefix_{i-k}$. Promatramo točku $(i, j)$. Ona se može
+nastaviti na LCS$_{\text{k++}}$ koji završava u točki $(i', j')$ s $i' <=
+    i - k$ i $j' <= j - k$. Po gornjoj pretpostavci točke uračunate u
+$MinYPrefix$ zadovoljavaju prvu nejednakost. Za drugu, slično kao
+u Huntovom, odnosno Kuoovom algoritmu, pronađemo $l$ takav da
+$MinYPrefix[l] < j - k + 1 <= MinYPrefix[l+1]$. Tada znamo da
+postoji LCS$_{\text{k++}}$ duljine $l$ koji se točkom $(i, j)$ može
+proširiti u LCS$_{\text{k++}}$ duljine $l+k$. Štoviše, u koliko $(i, j)$
+nema nastavak, znamo da je $dp(i, j) = l+k$.  Ako ipak postoji,
+\$dp(i, j) = max\{l+k, 1+dp(i-1, j-1)\}. Time smo izračunali
+vrijednosti tablice dinamičkog programiranja u svim točkama
+$i$-tog retka.
+
+Zatim moramo modificirati $MinYPrefix$ uzevši u obzir rezultate
+$i$-tog retka. U slučaju da $dp(i, j) = dp(i-1,j-1)+1$,
+jednostavno postavimo $MinYPrefix_i[dp(i,j)] =
+    min\{MinYPrefix_{i-1}[dp(i,j)], j\}$.  Inače $dp(i, j) = l+k$, te
+postavljamo $MinYPrefix_i[l+s] = min\{MinYPrefix_{i-1}[l+s], j\}$
+za sve $s$ iz $[1..k]$. Prvi instinkt je uzeti samo $s = k$, ali
+po gornjoj redefiniciji $MinYPrefix$, to nije dovoljno. Znamo da
+$MinYPrefix_{i-1}[l+s] <= j$, za $s$ iz [-l..0], budući da
+$MinYPrefix_{i-k}[l+s] <= j$ za $s$ iz istog intervala (slijedi iz
+definicije $l$ i činjenice da vrijednosti $MinYPrefix$ za fiksni
+indeks ne mogu rasti). Ali moguće je na primjer da
+$MinYPrefix_{i-1}[l+k-1] > j$ (naravno uz pretpostavku $k > 1$).
+Ali budući da točkom u stupcu $j$ možemo dobiti LCS$_{\text{k++}}$ duljine
+$l+k$, i $l+k >= l+k-1$, mora vrijediti $MinYPrefix_i[l+k-1] <=
+    j$. Analogan argument vrijedi za ostale $s$ iz $[1..k-1]$.
+
+Za kraj preostaje objasniti kako dobiti $MinYPrefix_{i-k}$.
+Najjednostavnije je podijeliti obradu retka na računanje
+vrijednosti tablice dinamičkog programiranja i osvježavanje niza
+$MinYPrefix$. Tako nakon što osvježimo $MinYPrefix$ za redak
+$i-k$, možemo odmah izračunati $dp$ za redak $i$. A kad dođemo do
+retka $i$, prvo osvježimo $MinYPrefix$, a zatim računamo $dp$ za
+redak $i+k$ (ako takav postoji), i tako dalje.
 
 
 
