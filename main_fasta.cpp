@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
       "Compute LCSk++ of two sequences given in FASTA format.\n\n"
       "Usage: ./main k input output\n\n"
       "Example: ./main 4 input.fa out\n"
-      "finds LCS4++ of sequences given in `input.fa` and\n"
+      "finds LCS4++ of first two sequences given in `input.fa` and\n"
       "and writes it to `out`\n"
     );
     return 0;
@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
   bool first = true;
   while (getline(infile, line)) {
     if (!line.size()) continue;
-    
+
     if (line[0] == '>') {
       if (!first) {
         sequences.push_back(current_seq);
@@ -50,15 +50,15 @@ int main(int argc, char** argv) {
 
   string& A = sequences[0];
   string& B = sequences[1];
-  
+
   printf("Computing LCSk++ of first two sequences..\n");
   printf("Sequence 1 length: %d\n", (int)A.size());
   printf("Sequence 2 length: %d\n", (int)B.size());
-  
+
   vector<pair<int, int>> recon;
   int length = lcskpp(sequences[0], sequences[1], k, &recon);
   printf("LCSk++ length: %d\n", length);
-  
+
   auto r = freopen(argv[3], "w", stdout);
   for (auto& p: recon) {
     putchar(A[p.first]);
