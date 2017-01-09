@@ -59,13 +59,17 @@ int main(int argc, char **argv)
   string A = gen_random_string(N, sigma);
   string B = gen_with_similarity(A, sigma, p_similar / 100.0);
 
-  string filenameA = filename + ".A";
-  string filenameB = filename + ".B";
-  freopen(filenameA.c_str(), "w", stdout);
-  printf("%s", A.c_str());
-
-  freopen(filenameB.c_str(), "w", stdout);
-  printf("%s", B.c_str());
+  freopen(filename.c_str(), "w", stdout);
+  printf(">Sequence1\n");
+  for (int i = 0; i < (int)A.size(); i += 80) {
+    string line = A.substr(i, 80);
+    printf("%s\n", line.c_str());
+  }
+  printf(">Sequence2\n");
+  for (int i = 0; i < (int)B.size(); i += 80) {
+    string line = B.substr(i, 80);
+    printf("%s\n", line.c_str());
+  }
 
   return 0;
 }
