@@ -2,6 +2,7 @@
 \usepackage{booktabs}
 \usepackage{url}
 \usepackage{rotating}
+\usepackage{amsmath}
 
 \begin{document}
 
@@ -49,8 +50,10 @@ preklapanja. Drugim riječima, u $LCS_{k++}$ razmatraju se zajednički
 podnizovi sastavljeni od podstringova duljine \textbf{barem} $k$.
 
 Uzmimo za primjer stringove $a$ = "ABBABDCDAD" i $b$ = "BCBABBDCDBAD".
-$LCS_{2++}(a,b) = 8$, podstring je "ABBDCDAD" ({boldano na primjeru}).
-$LCS_{3++}(a,b) = 6$, podstring je "ABBDCD" ({boldano na primjeru}).
+$LCS_{2++}(a,b) = 8$, podstring je "ABBDCDAD"
+("\textbf{ABB}AB\textbf{DCDAD}", "BCB\textbf{ABBDCD}B\textbf{AD}").
+$LCS_{3++}(a,b) = 6$, podstring je "ABBDCD"
+("\textbf{ABB}AB\textbf{DCD}AD", "BCB\textbf{ABBDCD}BAD").
 
 \chapter{Opis algoritma}
 
@@ -87,13 +90,18 @@ moguće je izvesti puno efikasnije od najbržih algoritama za
 sortiranje sufiksa. Za to smo koristili vlastitu eksperimentalno 
 optimiranu varijantu \emph{radix sorta}.
 
-{opis tog sorta? detalji? jel treba uopće?}
+{opis tog sorta? detalji? jel treba uopće????????????????}
 
 Nakon sortiranja algoritam je sličan prethodnom, niz (u ovom slučaju
 podstringova, a ne sufiksa), dijeli se na segmente prema jednakosti,
 te se iz odgovarajućih parova unutar segmenta generiraju točke.
 
-{primjer sortiranja, sortirati parove (substring, string, indeks)}
+Na primjer, za stringove $a =$ "ABC" i $c =$ "DAB" i $k = 2$
+sortiranjem bi dobili niz $[(AB, a, 1), (AB, b, 2), (BC, a, 2), (DA,
+  b, 1)]$, gdje trojke označavaju (\emph{podstring}, \emph{izvorni
+  string}, \emph{indeks u izvornom stringu}). U tom primjeru imali
+bi samo jedan zanimljiv segment, onaj za "AB", i iz njega bismo
+generirali točku $(1, 2)$.
 
 Valja napomenuti da u slučaju malog broja točaka ovaj dio algoritma
 vremenski potpuno dominira nad ostatkom, te je dobar dio napora uložen
@@ -103,7 +111,7 @@ kako bi se toliko ubrzao (više o samom ubrzanju u kasnijem poglavlju).
 Preostaje iz već poznatih točaka pronaći sam $LCS_{k++}$. Ako s $P$
 označimo skup točaka konstruiran u prethodnom koraku, rekurzivna
 relacija dinamičkog programiranja na tako prorijeđenoj matrici ima
-sljedeći oblik:
+sljedeći oblik iz \cite{Pavetic}:
 
 %% {dp relacija za sparse}
 %% {
@@ -113,6 +121,13 @@ sljedeći oblik:
 %%     (2)     1 + dp(i-1, j-1) ako (i-1, j-1) \in P
 %%   }
 %% }
+
+\begin{align*}
+dp(i, j) = \max\{ \\
+  &k + \max_{i' \le i - k, j' \le j - k}\{dp(i', j')\},    &      (1) \\ 
+  &1 + dp(i-1, j-1) \text{, ako } (i-1, j-1) \in P     &       (2)\\
+  \}
+\end{align*}
 
 Ako imamo niz $V$ točaka koji sadrži točke iz $P$ sortirane po prvoj,
 pa po drugoj koordinati, lako je za svaku točku $(i, j)$ pronaći
