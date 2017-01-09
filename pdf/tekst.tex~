@@ -1,4 +1,4 @@
-% Created 2017-01-09 Mon 00:33
+% Created 2017-01-09 Mon 00:37
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -215,7 +215,9 @@ proširiti u LCS$_{\text{k++}}$ duljine $l+k$. Štoviše, u koliko $(i, j)$
 nema nastavak, znamo da je $dp(i, j) = l+k$.  Ako ipak postoji,
 \$dp(i, j) = max\{l+k, 1+dp(i-1, j-1)\}. Time smo izračunali
 vrijednosti tablice dinamičkog programiranja u svim točkama
-$i$-tog retka.
+$i$-tog retka. Konačan algoritam bira između Huntovog i Kuoovog
+pristupa jednostavnom procjene vremena izvršavanja temeljene na
+njihovim teorijskim složenostima i empirijski utvrđenoj konstanti.
 
 Zatim moramo modificirati $MinYPrefix$ uzevši u obzir rezultate
 $i$-tog retka. U slučaju da $dp(i, j) = dp(i-1,j-1)+1$,
@@ -240,19 +242,6 @@ $MinYPrefix$. Tako nakon što osvježimo $MinYPrefix$ za redak
 $i-k$, možemo odmah izračunati $dp$ za redak $i$. A kad dođemo do
 retka $i$, prvo osvježimo $MinYPrefix$, a zatim računamo $dp$ za
 redak $i+k$ (ako takav postoji), i tako dalje.
-
-
-
-
-
-
-
-
-
-
-
-\subsection{modifikacije hunta i kuo-crossa za lcsk++}
-\label{sec-2-3}
 
 \section{mjerenja, rezultati}
 \label{sec-3}

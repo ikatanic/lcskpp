@@ -1,4 +1,4 @@
-% Created 2017-01-09 Mon 00:37
+% Created 2017-01-09 Mon 02:37
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -245,6 +245,22 @@ redak $i+k$ (ako takav postoji), i tako dalje.
 
 \section{mjerenja, rezultati}
 \label{sec-3}
+Zadatak je bio dobiti implementaciju barem tri puta bržu od
+originalnog LCS$_{\text{k++}}$ [link na github]. Brzinu rješenja testirali
+smo na stringovima duljine $n = 10000$ (za veći $n$ faktor ubrzanja
+našeg algoritma još je veći), s abecedom od četiri znaka, za $k$ od
+$4$ do $20$. Probabilistički model ulaznih stringova za testiranje
+preuzeli smo iz [Pavetić]. Tako smo prvi string generirali iz
+uniformne distribucije svih stringova duljine $n$, a drugi iz prvog
+uz zadanu sličnost $p$ (za svaki znak bi s vjerojatnošću $p$ uzeli
+isti znak kao u prvom stringu, a s vjerojatnošću \$"1-p" uniformno
+jedan od preostalih znakova.
+
+Sljedeći graf prikazuje faktore ubrzanja postignute za različite
+vrijednosti $k$ i različite sličnosti stringova. 
+
+\includegraphics[width=.9\linewidth]{../test/speedplot.png}
+
 
 \section{zaključak}
 \label{sec-4}
