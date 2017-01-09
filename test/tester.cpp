@@ -38,8 +38,11 @@ string gen_random_string(int n, int sigma) {
 string gen_with_similarity(const string &base, int sigma, double p) {
   string ret = base;
   REP(i, (int)ret.size())
-    if (!indicator(p))
-      ret[i] = (rand() % sigma) + 'A';
+    if (!indicator(p)) {
+      do {
+	ret[i] = (rand() % sigma) + 'A';
+      } while (base[i] == ret[i]);
+    }
   return ret;
 }
 
@@ -60,7 +63,7 @@ bool check_reconstruction(vector<pair<int, int>>& recon, string& A, string& B, i
 }
 
 double run(int k, double p) {
-  const int IT = 10;
+  const int IT = 30;
 
   srand(p * 100000000 + k);
 
