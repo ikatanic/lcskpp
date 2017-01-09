@@ -1,0 +1,47 @@
+\begin{thebibliography}{7}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[F.~Pavetić(2014)]{Pavetic}
+M.~Šikić F.~Pavetić, G.~Žužić.
+\newblock {LCSk++: Practical similarity metric for long strings}.
+\newblock 2014.
+
+\bibitem[G.~Benson(2014)]{Benson}
+B.~R.~Shalom G.~Benson, A.~Levy.
+\newblock {Longest common subsequence in k-length substrings}.
+\newblock \emph{CoRR, vol. abs/1402.2097}, 2014.
+
+\bibitem[J.W.~Hunt(1977)]{Hunt}
+T.G.~Szymanski J.W.~Hunt.
+\newblock A fast algorithm for computing longest common subsequences.
+\newblock \emph{Comm. of the ACM}, 20\penalty0 (5):\penalty0 350--353, 1977.
+
+\bibitem[L.~Bergroth(2000)]{Survey}
+T.~Raita L.~Bergroth, H.~Hakonen.
+\newblock A survey of longest common subsequence algorithms.
+\newblock \emph{SPIRE '00 Proceedings of the Seventh International Symposium on
+  String Processing Information Retrieval (SPIRE'00)}, 2000.
+
+\bibitem[Pavetić()]{github}
+F.~Pavetić.
+\newblock Original lcsk++ implementation.
+\newblock \url{https://github.com/fpavetic/lcskpp}.
+\newblock [preuzeto 9. 1. 2017.].
+
+\bibitem[S.~Deorowicz(2013)]{poljaci}
+S.~Grabowski S.~Deorowicz.
+\newblock Efficient algorithms for the longest common subsequence in k-length
+  substrings.
+\newblock \emph{arXiv:1311.4552}, 2013.
+
+\bibitem[S.~Kuo(1989)]{Kuo}
+G.R.~Cross S.~Kuo.
+\newblock An improved algorithm to find the length of the longest common
+  subsequence of two strings.
+\newblock \emph{ACM SIGIR Forum}, 23\penalty0 (3-4):\penalty0 89--99, 1989.
+
+\end{thebibliography}

@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: BioinfoProjekt2017_Katanic_Matula.aux
+The style file: fer.bst
+Database file #1: literatura.bib
+Warning--empty journal in Pavetic
+Warning--empty year in github
+You've used 7 entries,
+            2773 wiz_defined-function locations,
+            638 strings with 5872 characters,
+and the built_in function-call counts, 2270 in all, are:
+= -- 198
+> -- 70
+< -- 7
++ -- 28
+- -- 21
+* -- 129
+:= -- 365
+add.period$ -- 22
+call.type$ -- 7
+change.case$ -- 28
+chr.to.int$ -- 7
+cite$ -- 16
+duplicate$ -- 131
+empty$ -- 231
+format.name$ -- 28
+if$ -- 473
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 6
+newline$ -- 44
+num.names$ -- 28
+pop$ -- 68
+preamble$ -- 1
+purify$ -- 21
+quote$ -- 0
+skip$ -- 88
+stack$ -- 0
+substring$ -- 50
+swap$ -- 6
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 77
+warning$ -- 2
+while$ -- 23
+width$ -- 0
+write$ -- 93
+(There were 2 warnings)

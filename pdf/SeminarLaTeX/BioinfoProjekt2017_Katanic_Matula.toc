@@ -8,3 +8,4 @@
 \contentsline {subsection}{\numberline {2.2.3}Pro\IeC {\v s}irenje na $LCS_{k++}$}{4}
 \contentsline {chapter}{\numberline {3}Rezultati}{6}
 \contentsline {chapter}{\numberline {4}Zaklju\IeC {\v c}ak}{8}
+\contentsline {chapter}{\numberline {5}Literatura}{9}
