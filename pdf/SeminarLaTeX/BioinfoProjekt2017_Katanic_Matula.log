@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.1.3)  10 JAN 2017 00:15
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2017.1.3)  10 JAN 2017 15:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -749,7 +749,7 @@ LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <17.28> not available
 [2
 
 ] [3] [4]
-Overfull \hbox (17.40306pt too wide) in paragraph at lines 226--241
+Overfull \hbox (17.40306pt too wide) in paragraph at lines 224--239
 \T1/ptm/m/n/12 slu-£aju da $\OML/cmm/m/it/12 dp\OT1/cmr/m/n/12 (\OML/cmm/m/it/1
 2 i; j\OT1/cmr/m/n/12 ) = \OML/cmm/m/it/12 dp\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 
 i \OMS/cmsy/m/n/12 ^^@ \OT1/cmr/m/n/12 1\OML/cmm/m/it/12 ; j \OMS/cmsy/m/n/12 ^
@@ -759,7 +759,7 @@ mm/m/it/12 i; j\OT1/cmr/m/n/12 )] =
  []
 
 
-Overfull \hbox (33.01968pt too wide) in paragraph at lines 226--241
+Overfull \hbox (33.01968pt too wide) in paragraph at lines 224--239
 \OML/cmm/m/it/12 min\OMS/cmsy/m/n/12 f\OML/cmm/m/it/12 MinYPrefix[]\OT1/cmr/m/n
 /12 [\OML/cmm/m/it/12 dp\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 i; j\OT1/cmr/m/n/12 )
 ]\OML/cmm/m/it/12 ; j\OMS/cmsy/m/n/12 g$\T1/ptm/m/n/12 . Ina£e $\OML/cmm/m/it/1
@@ -769,7 +769,7 @@ cmm/m/it/12 MinYPrefix[]\OT1/cmr/m/n/12 [\OML/cmm/m/it/12 l \OT1/cmr/m/n/12 +
  []
 
 
-Overfull \hbox (27.71742pt too wide) in paragraph at lines 226--241
+Overfull \hbox (27.71742pt too wide) in paragraph at lines 224--239
 \OML/cmm/m/it/12 k$\T1/ptm/m/n/12 , ali po gor-njoj re-de-fi-ni-ciji $\OML/cmm/
 m/it/12 MinYPrefix$\T1/ptm/m/n/12 , to nije do-voljno. Znamo da $\OML/cmm/m/it/
 12 MinYPrefix[]\OT1/cmr/m/n/12 [\OML/cmm/m/it/12 l \OT1/cmr/m/n/12 +
@@ -781,8 +781,16 @@ Poglavlje 3.
 File: ../../test/speedplot.png Graphic file (type png)
 
 <use ../../test/speedplot.png>
-Package pdftex.def Info: ../../test/speedplot.png used on input line 267.
+Package pdftex.def Info: ../../test/speedplot.png used on input line 265.
 (pdftex.def)             Requested size: 578.15858pt x 433.61894pt.
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 273.
+
+
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/omsptm.fd
+File: omsptm.fd 
+)
+LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <12> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 273.
  [6
 
 ] [7 <../../test/speedplot.png>]
@@ -804,11 +812,11 @@ Underfull \hbox (badness 1383) in paragraph at lines 30--34
 
 ] (./BioinfoProjekt2017_Katanic_Matula.aux) ) 
 Here is how much of TeX's memory you used:
- 6027 strings out of 493029
- 83339 string characters out of 6136235
+ 6047 strings out of 493029
+ 83670 string characters out of 6136235
  161790 words of memory out of 5000000
- 9414 multiletter control sequences out of 15000+600000
- 60981 words of font info for 83 fonts, out of 8000000 for 9000
+ 9430 multiletter control sequences out of 15000+600000
+ 62059 words of font info for 84 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  43i,10n,40p,329b,340s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fon
@@ -828,7 +836,7 @@ a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pfb></usr
 texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fon
 ts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/ti
 mes/utmri8a.pfb>
-Output written on BioinfoProjekt2017_Katanic_Matula.pdf (11 pages, 243161 bytes
+Output written on BioinfoProjekt2017_Katanic_Matula.pdf (11 pages, 233112 bytes
 ).
 PDF statistics:
  112 PDF objects out of 1000 (max. 8388607)

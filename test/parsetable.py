@@ -16,11 +16,11 @@ M = list(zip(*lines))
 perc = ['40%', '50%', '60%', '70%', '80%', '90%']
 
 for line, p in zip(M, perc):
-    plt.plot(range(4, 21), line, label=p)
+    plt.plot(range(1, 21), line, label=p)
 
 plt.ylabel('ubrzanje')
 plt.xlabel('k')
-plt.plot(range(4, 21), 17 * [3], 'r--', label='3x ubrzanje')
+plt.plot(range(1, 21), 20 * [3], 'r--', label='3x ubrzanje')
 plt.ylim(ymin=2)
 plt.legend()
 
