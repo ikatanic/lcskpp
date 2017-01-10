@@ -63,7 +63,7 @@ bool check_reconstruction(vector<pair<int, int>>& recon, string& A, string& B, i
 }
 
 double run(int k, double p) {
-  const int IT = 30;
+  const int IT = 10*k;
 
   srand(p * 100000000 + k);
 
@@ -73,38 +73,49 @@ double run(int k, double p) {
 
   double pavetic_time = 0;
   double we_time = 0;
-
+  int pav_len, we_len;
+  
+  vector<pair<int, int>> recon;
+  pavetic_time = -clock();
   REP(it, IT) {
-    vector<pair<int, int>> pavetic_recon, we_recon;
-    int pavetic_len;
+    recon.clear();
+    int len;
 
-    pavetic_time = -clock();
-    lcskpp(A, B, k, &pavetic_len, &pavetic_recon);
-    pavetic_time += clock();
-
-    we_time = -clock();
-    int we_len = lcskpp(A, B, k, &we_recon);
-    we_time += clock();
-
-    if (pavetic_len != we_len) {
-      puts("LCSK++ lengths don't match:");
-      TRACE(pavetic_len _ we_len);
-      TRACE(A _ B _ k);
-      exit(0);
-    }
-
-    if (!check_reconstruction(pavetic_recon, A, B, pavetic_len)) {
-      puts("Pavetic reconstruction is wrong.");
-      TRACE(A _ B _ k);
-      exit(0);
-    }
-    if (!check_reconstruction(we_recon, A, B, we_len)) {
-      puts("Our reconstruction is wrong.");
-      TRACE(A _ B _ k);
-      exit(0);
-    }
+    lcskpp(A, B, k, &len, &recon);
+    pav_len = len;
+  }
+  pavetic_time += clock();
+  if (!check_reconstruction(recon, A, B, pav_len)) {
+    puts("Pavetic reconstruction is wrong.");
+    TRACE(A _ B _ k);
+    exit(0);
   }
 
+  recon.clear();
+  we_time = -clock();
+  REP(it, IT) {
+    recon.clear();
+    int len;
+
+    len = lcskpp(A, B, k, &recon);
+    we_len = len;
+  }
+  we_time += clock();
+  
+
+  if (!check_reconstruction(recon, A, B, we_len)) {
+    puts("Our reconstruction is wrong.");
+    TRACE(A _ B _ k);
+    exit(0);
+  }
+  
+  if (pav_len != we_len) {
+      puts("LCSK++ lengths don't match:");
+      TRACE(pav_len _ we_len);
+      TRACE(A _ B _ k);
+      exit(0);
+  }
+  
   return pavetic_time / we_time;
 }
 
