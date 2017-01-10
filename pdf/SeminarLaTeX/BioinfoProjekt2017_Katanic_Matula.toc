@@ -3,7 +3,7 @@
 \contentsline {chapter}{\numberline {2}Opis algoritma}{2}
 \contentsline {section}{\numberline {2.1}Tra\IeC {\v z}enje \emph {to\IeC {\v c}aka}}{2}
 \contentsline {section}{\numberline {2.2}Tra\IeC {\v z}enje $LCS_{k++}$ iz to\IeC {\v c}aka}{3}
-\contentsline {subsection}{\numberline {2.2.1}Huntov algoritam}{4}
+\contentsline {subsection}{\numberline {2.2.1}Huntov algoritam}{3}
 \contentsline {subsection}{\numberline {2.2.2}Kuoov algoritam}{4}
 \contentsline {subsection}{\numberline {2.2.3}Pro\IeC {\v s}irenje na $LCS_{k++}$}{4}
 \contentsline {chapter}{\numberline {3}Rezultati}{6}
