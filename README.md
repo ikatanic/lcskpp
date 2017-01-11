@@ -22,5 +22,9 @@ Files you are going to need to include in your project are:
 
 Only one method is exposed, and it's given in `lcskpp.h`.
 
+### Testing
+
+See `test/README.md`.
+
 ### References
 [1] Filip Pavetic, Goran Zuzic, Mile Sikic: _LCSk++: Practical similarity metric for long strings_, http://arxiv.org/abs/1407.2407  
