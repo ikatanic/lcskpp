@@ -2,7 +2,7 @@
 
 ## Comparing to baseline implementation
 
-`tester` compares this implementation to https://github.com/fpavetic/lcskpp.
+`tester` compares this implementation to https://github.com/fpavetic/lcskpp. Works with latest commit as of Jan 11, 2017 (commit `18fe0f9..`).
 
 Assumes latter is cloned into `../../lcskpp_pavetic/lcskpp`.
 
