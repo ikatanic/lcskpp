@@ -1,0 +1,20 @@
+#!/bin/bash
+mkdir tests
+
+1 | 10000 | 4 | 40% | plaintext
+2 | 10000 | 4 | 50% | plaintext
+3 | 10000 | 4 | 60% | plaintext
+4 | 10000 | 4 | 70% | plaintext
+5 | 10000 | 4 | 80% | plaintext
+6 | 10000 | 4 | 90% | plaintext
+7 | 100000 | 4 | 70% | plaintext
+8 | 1000000 | 4 | 90% | plaintext
+9 | 10000 | 2 | 50% | plaintext
+10 | 100000 | 5 | 60% | plaintext
+11 | 100000 | 8 | 70% | plaintext
+12 | 1000000 | 16 | 80% | plaintext
+13 | 1000000 | 26 | 80% | plaintext
+14 | 1000 | 3 | 95% | plaintext
+15 | 100 | 2 | 95% | plaintext
+16 | 10000 | 4 | 60% | FASTA
+17 | 1000000 | 4 | 60% | FASTA
