@@ -3,4 +3,4 @@ all:
 	g++ -o main_fasta lcskpp.cpp main_fasta.cpp -O2 -std=c++11
 
 clean:
-	rm -f tester
+	rm -f main main_fasta
