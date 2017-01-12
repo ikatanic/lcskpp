@@ -33,7 +33,7 @@ int lcskpp(const string& a, const string& b, int k,
   int cont_ptr = 0;
   int last_idx = -1;
 
-  // We process matches row by row (ptr).
+  // We process matches row by row (while loop).
   // When at row i, we also handle queries on MinYPrefix for matches
   // in row i+k-1 (query_ptr).
   // cont_ptr points to ptr's possible continuation (applicable only to k > 1).
@@ -89,11 +89,12 @@ int lcskpp(const string& a, const string& b, int k,
     }
 
     // now the main loop through matches in row i, finishing off their
-    // dp calculation and updates to MinYPrefix
+    // dp calculation and doing updates to MinYPrefix
     while (ptr < n_matches && matches[ptr].first == i) {
       int j = matches[ptr].second;
       int& ptr_dp = match_dp[ptr];
 
+      // update MinYPrefix
       for (int s = ptr_dp; s > ptr_dp-k && MinYPrefix[s].first > j; --s) {
         MinYPrefix[s] = {j, ptr};
       }

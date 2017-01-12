@@ -12,7 +12,7 @@
 using namespace std;
 
 // If there was no overflow, same as:
-//   c = a*b
+//   *c = a*b
 //   return c < 2^63
 bool product_fits_in_63bits(uint64_t a, uint64_t b, uint64_t* c) {
   if (a <= LLONG_MAX / b) {
@@ -24,7 +24,7 @@ bool product_fits_in_63bits(uint64_t a, uint64_t b, uint64_t* c) {
 
 
 // If there was no overflow, same as:
-//   c = a^b
+//   *c = pow(a, b)
 //   return c < 2^63
 bool power_fits_in_63bits(uint64_t a, uint64_t b, uint64_t* c) {
   *c = 1;
