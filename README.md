@@ -9,8 +9,8 @@ It's a faster implementation of LCSk++ algorithm introduced in [1].
 First, build the project using `make`. For that you'll need C++11 compatible
 compiler. Then use `./main` or `./main_fasta` executables. Both of them read
 two strings from given files and output their LCSk++ to a file. Only difference
-is that first one takes raw text files while second one takes files in FASTA
-format. Running them with no arguments will show you more details on how to use
+is that the first one takes raw text files while the second one takes files in FASTA
+format. Running them with no arguments will give you more details on how to use
 them.
 
 ### Using it in your own project

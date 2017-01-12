@@ -6,7 +6,7 @@
 
 Assumes latter is cloned into `../../lcskpp_pavetic/lcskpp`.
 
-E.g. `./tester 1 20 40 90` will run generate tests with k taking all values from [1, 20] and
+E.g. `./tester 1 20 40 90` will run tests with k taking all values from [1, 20] and
 similarity taking values 40%, 50%, 60%, 70%, 80% and 90%.
 
 
@@ -42,4 +42,5 @@ Test id | N (string length) | alphabet size | p_similar | format |
 15 | 100 | 2 | 95% | plaintext
 16 | 10000 | 4 | 70% | FASTA
 17 | 100000 | 4 | 70% | FASTA
-17 | 1000000 | 4 | 70% | FASTA
+18 | 1000000 | 4 | 70% | FASTA
+19 | 10 | 4 | - | plaintext

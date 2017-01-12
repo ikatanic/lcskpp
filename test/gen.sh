@@ -23,5 +23,7 @@ g++ gen_fasta.cpp -std=c++0x -o gen_fasta
 ./gen_fasta 10000 4 70 tests/test.16.fa
 ./gen_fasta 100000 4 70 tests/test.17.fa
 ./gen_fasta 1000000 4 70 tests/test.18.fa
+# example from the report
+echo "ABBABDCDAD" > tests/test.19.A && echo "BCBABBDCDBAD" > tests/test.19.B
 
 rm gen gen_fasta
