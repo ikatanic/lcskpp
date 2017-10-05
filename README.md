@@ -1,8 +1,6 @@
 # LCSk++
 
-This is repository for [Bioinformatics](http://www.fer.unizg.hr/predmet/bio) course project at University of Zagreb.
-
-It's a faster implementation of LCSk++ algorithm introduced in [1].
+This is a faster implementation of LCSk++ algorithm introduced in [1].
 
 ### How to use
 
