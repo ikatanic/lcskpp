@@ -1,6 +1,8 @@
 # LCSk++
 
-This is a faster implementation of LCSk++ algorithm introduced in [1].
+LCSk++ is a similarity metric for long strings introduced in [1].
+
+This is an implementation of a fast algorithm [2] for computing it.
 
 ### How to use
 
@@ -26,3 +28,5 @@ See `test/README.md`.
 
 ### References
 [1] Filip Pavetic, Goran Zuzic, Mile Sikic: _LCSk++: Practical similarity metric for long strings_, http://arxiv.org/abs/1407.2407  
+
+[2] Filip Pavetic, Ivan Katanic, Gustav Matula, Goran Zuzic, Mile Sikic: _Fast and simple algorithms for computing both LCSk and  LCSk+_, https://arxiv.org/abs/1705.07279
